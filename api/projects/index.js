@@ -59,7 +59,8 @@ async function create(req, res) {
   for (const d of P.PROJECT_FOLDERS) files.push({ path: P.projectPath(slug, d + "/.gitkeep"), content: "" });
 
   const commit = await gh.commitFiles({ message: "ui: start " + slug, files });
-  H.send(res, 201, { project: p, waiting: S.waitingOn(p), commit: commit.sha });
+  const routine = await require("../_lib/routine").fireRoutine("ui: start " + slug);
+  H.send(res, 201, { project: p, waiting: S.waitingOn(p), commit: commit.sha, routine });
 }
 
 module.exports = H.handler(async (req, res) => {

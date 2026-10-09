@@ -36,6 +36,14 @@ jobs:
         if: hashFiles('tools/test-auth.js') != ''
         run: node tools/test-auth.js
 
+      - name: UI tests
+        if: hashFiles('tools/test-ui.js') != ''
+        run: node tools/test-ui.js
+
+      - name: Routine hook tests
+        if: hashFiles('tools/test-routine.js') != ''
+        run: node tools/test-routine.js
+
       - name: Install Chromium for the deck test
         if: hashFiles('tools/test-deck.js') != ''
         run: |

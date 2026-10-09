@@ -31,5 +31,6 @@ module.exports = H.handler(async (req, res) => {
   const commitFiles = await P.materializeOps(slug, result.ops);
   commitFiles.push({ path: P.projectPath(slug, "project.json"), content: P.projectJSON(result.project) });
   const commit = await gh.commitFiles({ message: "ui(" + slug + "): " + action, files: commitFiles });
-  H.send(res, 200, { project: result.project, waiting: S.waitingOn(result.project), commit: commit.sha });
+  const routine = await require("../../_lib/routine").fireRoutine("ui(" + slug + "): " + action);
+  H.send(res, 200, { project: result.project, waiting: S.waitingOn(result.project), commit: commit.sha, routine });
 });

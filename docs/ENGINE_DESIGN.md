@@ -31,10 +31,10 @@ GitHub is the queue, the store, and the audit trail. Each project is a folder. E
 | Agent | Runs where | Holds which secrets | Does |
 |---|---|---|---|
 | You | Browser, OncoGenik UI | A passkey on your devices | Pick ideas, review, approve, choose images, order slides |
-| Claude | GitHub Actions, Claude Code | Anthropic key, in Actions secrets | Trusted-source research, news, synthesis, draft, revise, outline, image prompts, deck build, package, guideline proposals |
+| Claude | A Claude Code Routine on your subscription | None. Runs as your claude.ai account | Trusted-source research, news, synthesis, draft, revise, outline, image prompts, deck build, package, guideline proposals |
 | Hermes | Your home machine | OpenAI key, forum APIs, medical search APIs, a GitHub token for this repo | Idea scanning, forum research, literature search, image generation |
 
-Secrets never share a location. The browser holds none. The UI's serverless side holds one GitHub token. Claude's key lives in Actions. Hermes keeps its own on your machine. Losing any one place leaks one set.
+Secrets never share a location. The browser holds none. The UI's serverless side holds one GitHub token and the routine's fire token. Claude needs no key at all. Hermes keeps its own on your machine. Losing any one place leaks one set.
 
 ## Project lifecycle
 
@@ -177,7 +177,7 @@ Hermes and Claude both act on whatever lands in the repo, so the real security b
 |---|---|---|
 | You | UI after passkey, or your own GitHub account | Full |
 | UI backend | Fine-grained token | Contents only, this repo only |
-| Claude | Actions token | Contents only, scoped by the workflow |
+| Claude | Your GitHub access, through the routine | Whatever your account can push |
 | Hermes | Its own fine-grained token | Contents only, this repo only |
 
 Nobody else can commit. A bad actor without your passkey reaches a 401 and nothing more.
@@ -188,7 +188,7 @@ One residual risk remains and it is prompt injection through research. Hermes re
 
 | Agent | Trigger |
 |---|---|
-| Claude | A GitHub Actions workflow runs on push. It finds projects whose current tasks are owned by Claude with status `todo`, runs the matching skill with Claude Code, commits, and pushes. |
+| Claude | A Claude Code Routine, fired through its API endpoint by the UI and by Hermes whenever they commit Claude work, with an optional hourly schedule as backstop. It runs `tools/next-claude-task.js`, the matching skill, commits to main, and pushes. Details in `docs/ROUTINE.md`. |
 | Hermes | A Hermes cron job polls the repo every ten minutes. Details below. |
 | Idea scanning | A second Hermes cron job, on whatever schedule you like, writes to `ideas/`. |
 | Learn | Runs when a project reaches done. |
@@ -238,7 +238,7 @@ Nothing is open. Build step one can start.
 | 1 Skeleton | Built, tested | `tools/`, `guidelines/`, `.claude/skills/` |
 | 2 Hermes contract | Drafted, untested against Hermes | `hermes/`, `docs/HERMES_CONTRACT.md` |
 | 3 Deck tool | Built, tested | `tools/build-deck.js`, `docs/DECK_TOOL.md` |
-| 4 Actions runner | Built, untested on GitHub until merged to main | `.github/workflows/`, `docs/ACTIONS.md` |
+| 4 Claude worker | Routine prompt and fire hooks built, routine not yet created | `routine/PROMPT.md`, `docs/ROUTINE.md`; Actions fallback in `docs/ACTIONS.md` |
 | 5 UI and login | Built, unit-tested, not yet deployed | `web/`, `api/`, `middleware.js`, `docs/UI.md`, `docs/AUTH.md` |
 | 6 Learn | Built, exercised once | `.claude/skills/learn`, `guidelines/proposals/` |
 | Demo | One project run to done by hand | `projects/immunotherapy-side-effects/`, `docs/DEMO_RUN.md` |

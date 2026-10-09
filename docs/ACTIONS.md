@@ -1,3 +1,5 @@
+> **Fallback only.** The primary Claude worker is a Claude Code Routine on your subscription, described in `docs/ROUTINE.md`. This workflow is kept as a manual alternative. It runs only on `workflow_dispatch` and authenticates with `CLAUDE_CODE_OAUTH_TOKEN` from `claude setup-token`, which Anthropic's GitHub Actions docs list for Pro plans and which bills to the subscription rather than API credits. Everything below that mentions push or schedule triggers describes the earlier design.
+
 # GitHub Actions runner
 
 How Claude's tasks get run without anyone opening a terminal. Two workflows live in `.github/workflows/`.
@@ -47,7 +49,7 @@ Pushes made with `GITHUB_TOKEN` do not start new workflow runs: "events triggere
 
 | Name | Where | Why |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | Repository secret | Passed to the action's `anthropic_api_key` input. Never in the workflow file |
+| `CLAUDE_CODE_OAUTH_TOKEN` | Repository secret | From `claude setup-token`. Passed to the action's `claude_code_oauth_token` input. An `ANTHROPIC_API_KEY` with `anthropic_api_key` works too but bills API credits |
 | `GITHUB_TOKEN` | Automatic | Commit, push, dispatch, and the action's GitHub operations |
 
 Job permissions in `claude-runner.yml`:

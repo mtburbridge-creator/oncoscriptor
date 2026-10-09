@@ -25,5 +25,6 @@ module.exports = H.handler(async (req, res) => {
     message: "ui(" + slug + "): retry " + task,
     files: [{ path: P.projectPath(slug, "project.json"), content: P.projectJSON(project) }]
   });
-  H.send(res, 200, { project, waiting: S.waitingOn(project), commit: commit.sha });
+  const routine = await require("../../_lib/routine").fireRoutine("ui(" + slug + "): retry " + task);
+  H.send(res, 200, { project, waiting: S.waitingOn(project), commit: commit.sha, routine });
 });

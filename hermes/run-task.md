@@ -32,6 +32,7 @@ Success:
 ```
 node tools/project.js done <slug> <task>
 git add projects/<slug> && git commit -m "hermes(<slug>): <task>" && git push
+tools/fire-routine.sh "hermes(<slug>): <task>"   # wakes the Claude routine; needs ROUTINE_FIRE_URL and ROUTINE_FIRE_TOKEN, see docs/ROUTINE.md
 ```
 
 Failure (write a one-line reason; the owner reads it in the UI):

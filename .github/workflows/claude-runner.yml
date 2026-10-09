@@ -14,15 +14,11 @@
 
 name: Claude runner
 
+# Opt-in fallback. The primary Claude worker is the Routine in docs/ROUTINE.md,
+# which runs on the owner's subscription. This workflow only runs when
+# dispatched by hand, and authenticates with CLAUDE_CODE_OAUTH_TOKEN, the
+# subscription token from `claude setup-token`.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "projects/**"
-      - "ideas/**"
-      - "guidelines/**"
-  schedule:
-    - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
       slug:
@@ -154,7 +150,7 @@ jobs:
         continue-on-error: true
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # Use the workflow token so no Claude GitHub App install is needed.
           # Remove this line to use the App (then id-token: write above is required).
           github_token: ${{ secrets.GITHUB_TOKEN }}

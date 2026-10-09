@@ -6,10 +6,10 @@ Order of operations. Each step has its own doc with the details.
 
 The Actions runner only fires on `main`, so the pull request has to land first. CI runs the state machine, auth, UI, and deck tests on every push.
 
-## 2. GitHub secrets and the Actions runner
+## 2. The Claude worker, a Routine on your subscription
 
-- Add the repository secret `ANTHROPIC_API_KEY`.
-- The runner needs no other secret. It commits with the built-in token and re-dispatches itself. Details and the manual trigger are in `docs/ACTIONS.md`.
+- Create the routine at claude.ai/code/routines with the prompt in `routine/PROMPT.md`, this repo, the Default environment, and an API trigger. Copy the fire URL and token. Full steps in `docs/ROUTINE.md`.
+- No API key is involved. Runs draw from your Pro usage.
 - Confirm the repo is private. Settings, General, Danger Zone shows visibility.
 
 ## 3. Vercel project
@@ -26,6 +26,8 @@ The Actions runner only fires on `main`, so the pull request has to land first. 
 | `SESSION_SECRET` | `openssl rand -base64 48` |
 | `RP_ID` | the hostname you will sign in at |
 | `SETUP_TOKEN` | `openssl rand -hex 24`, temporary |
+| `ROUTINE_FIRE_URL` | the routine's fire URL |
+| `ROUTINE_FIRE_TOKEN` | the routine's bearer token |
 
 - Deploy. Nobody can sign in yet because no passkey is enrolled.
 
@@ -35,7 +37,7 @@ Open `/login?setup=1`, paste the setup token, approve the passkey prompt on your
 
 ## 5. Hermes
 
-Clone the repo on the Hermes machine with its own fine-grained token, copy `hermes/oncogenik-poll.py` into `~/.hermes/scripts/`, and create the cron job from `hermes/README.md`. The per-task runbook is `hermes/run-task.md`. This is the part marked draft; expect to tune it with Hermes.
+Clone the repo on the Hermes machine with its own fine-grained token, copy `hermes/oncogenik-poll.py` into `~/.hermes/scripts/`, set `ROUTINE_FIRE_URL` and `ROUTINE_FIRE_TOKEN` in the environment the cron job sees, and create the cron job from `hermes/README.md`. The per-task runbook is `hermes/run-task.md`. This is the part marked draft; expect to tune it with Hermes.
 
 ## 6. Studio cutover
 
@@ -43,7 +45,7 @@ The Studio is served at `/backgenapp` on the new deployment. Repoint the markbur
 
 ## 7. First real project
 
-Start one from the Ideas page. Watch the dashboard: it should move to "Claude is working" within a minute of the commit, and to "Hermes is working" for the forum and literature tasks once the cron job is live. The demo project in `projects/immunotherapy-side-effects/` shows what a finished one looks like.
+Start one from the Ideas page. Watch the dashboard: the start commit fires the routine, and a new session appears at claude.ai/code/routines within a minute, and to "Hermes is working" for the forum and literature tasks once the cron job is live. The demo project in `projects/immunotherapy-side-effects/` shows what a finished one looks like.
 
 ## Daily use
 
