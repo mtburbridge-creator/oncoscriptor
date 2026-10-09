@@ -84,7 +84,7 @@ node tools/stage-static.js                                # the Vercel build, ch
 committed), builds a deck from them in an order natural sorting would not produce
 (`c, a, b`), then opens the deck in a second headless page and checks five `<section>`s
 (blank + 3 + blank), that the three image sections carry `img-slide` with an `<img>`
-whose `src` starts with `data:image`, that the images are in the requested order, and
+whose `src` starts with `data:image` (the Studio re-encodes uploads as JPEG), that the images are in the requested order, and
 that the deck logs no page errors. It also checks that settings change the baked
 background, the CLI output, the missing-settings fallback, `order.json` resolution with
 the `.jpg` fallback, and the non-zero exit on a missing project.

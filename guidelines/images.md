@@ -23,7 +23,7 @@ Read by the `prompts` and `reprompt` skills. Twelve images are generated per pro
 
 ## Prompt format
 
-One paragraph, under 80 words, in this order: subject, then style, then mood, then composition. End with the constraints.
+One paragraph, under 100 words, in this order: subject, then style, then mood, then composition. End with the constraints.
 
 ```
 <Subject: who or what, where, doing what, no faces or faces turned away>. <Style: soft editorial illustration, painted texture, warm cream and sand palette with sage green accent and gentle sky blue>. <Mood: calm, unhurried, hopeful>. <Composition: 16:9 landscape, subject in the center-left, quiet open space on the right, soft natural light>. No text, no logos, no identifiable faces, no needles, no blood.
@@ -35,7 +35,7 @@ Example:
 
 ## Quality bar
 
-- 12 prompts, ids `01` to `12`, each under 80 words, each naming the palette, each ending with the constraint line.
+- 12 prompts, ids `01` to `12`, each under 100 words, each naming the palette, each ending with the constraint line.
 - Every prompt maps to a real H2 in `script/final.md`.
 - Subjects and settings vary across the set; at most three medical settings; at least two with no people.
 - Nothing that could read as a specific person, a specific hospital, or a specific product.

@@ -32,7 +32,7 @@ Argument: `<slug>`. Project dir is `projects/<slug>/`. Task name is `slides.buil
    node tools/build-deck.js <slug>
    ```
    The tool opens `slides/studio/index.html` headlessly, applies the settings file, loads the images in order, exports through the Studio's Collate path, and writes `projects/<slug>/slides/deck.html`.
-5. Confirm `projects/<slug>/slides/deck.html` exists, is non-empty, and contains one slide per id in the order (for example `grep -c "<section" deck.html` or whatever marker the tool documents in its header comment).
+5. Confirm `projects/<slug>/slides/deck.html` exists, is non-empty, and contains one slide per id in the order (`grep -o '<section' deck.html | wc -l` must equal the order length plus two blanks; `grep -c` counts lines, not matches).
 6. `node tools/project.js done <slug> slides.build` (the project moves to `package`).
 
 ## Quality bar

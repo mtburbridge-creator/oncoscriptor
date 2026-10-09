@@ -27,11 +27,12 @@ Argument: `<slug>`. Project dir is `projects/<slug>/`. Task name is `script.draf
 2. `node tools/project.js start <slug> script.draft`
 3. Read the inputs above. Build a section plan: the required sections from the guideline, with body sections drawn from the patient questions in notes, and word targets from the budget table for `target_minutes`.
 4. Write `script/v1.md` in the guideline's markdown layout: H1 title, header line (target minutes, total words, date, slug), one H2 per section with its `*About N minutes*` line, the verbatim disclaimer, the recap, the "Talk to your oncologist" close, and a `## Sources` section listing only the keys used.
-5. Self-check against the guideline's quality bar. Count words with `wc -w` on the body (exclude the Sources section) and confirm the total is within the range for `target_minutes`; adjust if not. Check every `[Sn]` exists in `sources.md`:
+5. Self-check against the guideline's quality bar. Count spoken words and check citations with the shared tools, and adjust until both pass:
    ```
-   grep -o '\[S[0-9]*\]' projects/<slug>/script/v1.md | sort -u
+   node tools/wordcount.js projects/<slug>/script/v1.md
+   node tools/check-citations.js <slug> script/v1.md
    ```
-   and compare to the `## Sn` headings in `sources.md`.
+   The word count must fall inside the budget row for `target_minutes` in `guidelines/script.md`. This tool is the one definition of length used everywhere.
 6. `node tools/project.js done <slug> script.draft` (the state machine sets `script_version` to 1 and moves the project to `script_review`).
 
 ## Quality bar

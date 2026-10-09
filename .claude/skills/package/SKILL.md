@@ -36,7 +36,7 @@ Plus `package/README.md`, written by this skill.
    cp $P/slides/deck.html $P/package/deck.html
    cp $P/research/sources.md $P/package/sources.md
    ```
-5. Compute the length: `wc -w` on `script.md` excluding its `## Sources` section, divided by 140, rounded to the nearest half minute. Count slides in `deck.html` from `slides/order.json`.
+5. Compute the length with `node tools/wordcount.js projects/<slug>/package/script.md` and use its words and minutes as printed. Count slides in `deck.html` from `slides/order.json`.
 6. Write `package/README.md`:
    ```markdown
    # <title>

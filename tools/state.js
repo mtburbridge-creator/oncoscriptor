@@ -121,6 +121,9 @@ function setTask(p, name, status, extra) {
   if (status !== "failed") delete t.error;
   if (extra) Object.assign(t, extra);
   log(p, name + " -> " + status);
+  // The state machine owns version numbers. A finished revision is the next version.
+  if (status === "done" && name === "script.revise") { p.script_version += 1; log(p, "script v" + p.script_version); }
+  if (status === "done" && name === "outline.revise") { p.outline_version += 1; log(p, "outline v" + p.outline_version); }
   reconcile(p);
   return p;
 }
@@ -288,7 +291,10 @@ function applyAction(p, action, payload, files) {
       for (const id of ids) {
         const d = incoming[id] || {};
         if (["approve", "reject", "iterate"].indexOf(d.decision) < 0) throw new Error("bad decision for " + id);
-        decisions.decisions[id] = { decision: d.decision, note: d.note || "", at: now() };
+        const prev = decisions.decisions[id];
+        const history = (prev && prev.history) ? prev.history.slice() : [];
+        if (prev) history.push({ decision: prev.decision, note: prev.note || "", at: prev.at });
+        decisions.decisions[id] = { decision: d.decision, note: d.note || "", at: now(), history };
         if (d.decision === "iterate") iterate++;
       }
       decisions.updated = now();

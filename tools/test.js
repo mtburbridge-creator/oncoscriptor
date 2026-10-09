@@ -45,7 +45,9 @@ t("feedback queues a revise, approve moves on", () => {
   assert.equal(p.tasks["script.revise"].status, "todo");
   assert.throws(() => S.applyAction(p, "script.approve"), /revision/);
   S.setTask(p, "script.revise", "done");
+  assert.equal(p.script_version, 2, "revise done bumps the version");
   r = S.applyAction(p, "script.approve");
+  assert.equal(r.ops[0].from, "script/v2.md");
   assert.equal(r.ops[0].op, "copy");
   assert.equal(p.phase, "outline_images");
   assert.equal(p.tasks["images.generate"].status, "blocked");
@@ -72,6 +74,10 @@ t("image iterate loops through reprompt and regenerate, then finish", () => {
   r = S.applyAction(p, "images.decide", { decisions: { "02": { decision: "reject" } } },
     { "images/prompts.json": prompts, "images/decisions.json": decisions });
   const decisions2 = r.ops[0].content;
+  const d2 = JSON.parse(decisions2).decisions["02"];
+  assert.equal(d2.decision, "reject");
+  assert.equal(d2.history[0].decision, "iterate");
+  assert.equal(d2.history[0].note, "warmer");
   assert.throws(() => S.applyAction(p, "review.finish", {}, { "images/prompts.json": prompts, "images/decisions.json": decisions2 }), /outline/);
   S.applyAction(p, "outline.approve");
   assert.throws(() => S.applyAction(p, "slides.order", { order: ["02"] }, { "images/decisions.json": decisions2 }), /not approved/);

@@ -12,6 +12,7 @@
  *   node tools/project.js action <slug> <action> [--json '{...}' | --file payload.json]
  *   node tools/project.js reconcile [slug]
  *   node tools/project.js status [slug]
+ *   node tools/project.js show <slug> [task]         project fields, or one task, as JSON
  *   node tools/project.js validate
  */
 const fs = require("fs");
@@ -82,7 +83,10 @@ switch (cmd) {
     save(p);
     if (flags.idea) {
       const src = path.join(ROOT, flags.idea);
-      if (fs.existsSync(src)) fs.copyFileSync(src, path.join(projDir(p.slug), "idea.md"));
+      if (!fs.existsSync(src)) die("no idea file " + flags.idea);
+      const started = fs.readFileSync(src, "utf8").replace(/^status:.*$/m, "status: started");
+      fs.writeFileSync(src, started);
+      fs.writeFileSync(path.join(projDir(p.slug), "idea.md"), started);
     } else {
       fs.writeFileSync(path.join(projDir(p.slug), "idea.md"),
         "title: " + flags.title + "\nsource: human\nfound: " + p.created + "\nstatus: started\n\n");
@@ -152,6 +156,21 @@ switch (cmd) {
         if (t.status === "done") continue;
         console.log("    " + name.padEnd(22) + t.owner.padEnd(8) + t.status + (t.error ? "  " + t.error : ""));
       }
+    }
+    break;
+  }
+  case "show": {
+    const [slug, task] = flags._;
+    if (!slug) die("usage: show <slug> [task]");
+    const p = load(slug);
+    if (task) {
+      if (!p.tasks[task]) die("no task " + task + " on " + slug);
+      console.log(JSON.stringify(p.tasks[task], null, 2));
+    } else {
+      const { history, tasks, ...rest } = p;
+      rest.waiting = S.waitingOn(p);
+      rest.tasks = Object.fromEntries(Object.entries(tasks).map(([k, t]) => [k, t.status]));
+      console.log(JSON.stringify(rest, null, 2));
     }
     break;
   }

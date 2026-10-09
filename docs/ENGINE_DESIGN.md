@@ -99,8 +99,14 @@ exemplars/                 approved scripts, outlines, prompts for drafts to rea
 projects/<slug>/           one folder per project, layout above
 slides/studio/             Slide Background Studio, merged subtree
 tools/
+  state.js                 the state machine, pure functions
+  project.js               local CLI: new, todo, start, done, fail, action, show, validate
   build-deck.js            drives the Studio headlessly to produce deck.html
-  validate.js              checks project.json and citation keys
+  stage-static.js          Vercel build: copies web/, vendor bundles, and the Studio into dist/
+  next-claude-task.js      picks the next Claude task for the Actions runner
+  wordcount.js             the one definition of spoken length
+  check-citations.js       every [Sn] key must resolve in research/sources.md
+  test*.js                 fast checks CI runs
 docs/
 ```
 
@@ -224,3 +230,17 @@ Each step ends with something you can use.
 
 Nothing is open. Build step one can start.
 
+
+## Build status, 2026-10-09
+
+| Step | State | Where |
+|---|---|---|
+| 1 Skeleton | Built, tested | `tools/`, `guidelines/`, `.claude/skills/` |
+| 2 Hermes contract | Drafted, untested against Hermes | `hermes/`, `docs/HERMES_CONTRACT.md` |
+| 3 Deck tool | Built, tested | `tools/build-deck.js`, `docs/DECK_TOOL.md` |
+| 4 Actions runner | Built, untested on GitHub until merged to main | `.github/workflows/`, `docs/ACTIONS.md` |
+| 5 UI and login | Built, unit-tested, not yet deployed | `web/`, `api/`, `middleware.js`, `docs/UI.md`, `docs/AUTH.md` |
+| 6 Learn | Built, exercised once | `.claude/skills/learn`, `guidelines/proposals/` |
+| Demo | One project run to done by hand | `projects/immunotherapy-side-effects/`, `docs/DEMO_RUN.md` |
+
+`docs/DEPLOY.md` is the order of operations to bring it live.

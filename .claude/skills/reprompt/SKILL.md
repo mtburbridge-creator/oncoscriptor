@@ -29,7 +29,7 @@ Argument: `<slug>`. Project dir is `projects/<slug>/`. Task name is `images.repr
 5. Increase the top-level `version` by 1. Leave `model` and `size` alone.
 6. Write `images/prompts.json` with two-space indentation and validate: same 12 ids in the same order, only iterate ids differ from before, exactly those have `status` `todo`.
    ```
-   git diff --stat projects/<slug>/images/prompts.json
+   git diff --stat projects/<slug>/images/prompts.json   # empty for a project not yet committed; then compare against a copy you saved before editing
    ```
 7. `node tools/project.js done <slug> images.reprompt` (this unblocks Hermes's `images.generate` round, which regenerates only the `todo` ids).
 
