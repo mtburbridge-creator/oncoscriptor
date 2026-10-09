@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Sign in · OncoGenik</title>
+  <style>
+    :root {
+      --bg: #0f1216;
+      --panel: #171b21;
+      --line: #2a3038;
+      --text: #e6e9ee;
+      --muted: #9aa3ad;
+      --accent: #5aa9ff;
+      --accent-ink: #06111f;
+      --ok: #6fd39a;
+      --bad: #ff7b7b;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      display: grid;
+      place-items: center;
+      padding: 24px 16px;
+    }
+    main { width: 100%; max-width: 440px; }
+    h1 { font-size: 22px; margin: 0 0 4px; font-weight: 600; }
+    .sub { color: var(--muted); margin: 0 0 24px; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+    button[disabled] { opacity: .55; cursor: default; }
+    button.secondary { background: #262c35; color: var(--text); }
+    label { display: block; font-size: 14px; color: var(--muted); margin: 12px 0 6px; }
+    input, textarea {
+      width: 100%;
+      background: #0b0e12;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font: inherit;
+    }
+    textarea { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; min-height: 120px; resize: vertical; }
+    .status { min-height: 1.5em; margin-top: 12px; font-size: 14px; color: var(--muted); }
+    .status.ok { color: var(--ok); }
+    .status.bad { color: var(--bad); }
+    .hidden { display: none; }
+    ol { padding-left: 20px; color: var(--muted); font-size: 14px; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; background: #0b0e12; padding: 1px 5px; border-radius: 4px; }
+    .foot { color: var(--muted); font-size: 13px; text-align: center; }
+    .foot a { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>OncoGenik</h1>
+    <p class="sub">Sign in with the passkey enrolled for this site.</p>
+
+    <section class="panel" id="signin-panel">
+      <button id="signin" type="button">Sign in with passkey</button>
+      <div class="status" id="signin-status" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="panel hidden" id="setup-panel">
+      <h2 style="font-size:17px;margin:0 0 6px">Enroll a passkey</h2>
+      <p class="sub" style="margin-bottom:0">One-time setup. Needs the <code>SETUP_TOKEN</code> currently set in Vercel.</p>
+      <label for="setup-token">Setup token</label>
+      <input id="setup-token" type="password" autocomplete="off" spellcheck="false">
+      <div style="height:12px"></div>
+      <button id="enroll" type="button" class="secondary">Create passkey</button>
+      <div class="status" id="setup-status" role="status" aria-live="polite"></div>
+
+      <div id="setup-result" class="hidden">
+        <label for="credential">PASSKEY_CREDENTIAL</label>
+        <textarea id="credential" readonly spellcheck="false"></textarea>
+        <div style="height:8px"></div>
+        <button id="copy" type="button" class="secondary">Copy</button>
+        <ol>
+          <li>In Vercel, add the environment variable <code>PASSKEY_CREDENTIAL</code> with the value above.</li>
+          <li>Delete <code>SETUP_TOKEN</code>. The enrollment routes disappear with it.</li>
+          <li>Redeploy, then come back to this page and sign in.</li>
+        </ol>
+      </div>
+    </section>
+
+    <p class="foot"><a href="/backgenapp">Slide Background Studio</a> is open without signing in.</p>
+  </main>
+
+  <script src="/vendor/simplewebauthn-browser.js"></script>
+  <script src="/login.js"></script>
+</body>
+</html>
