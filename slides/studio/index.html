@@ -1,0 +1,2713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slide Background Studio</title>
+<style>
+  :root {
+    --bg: #14161c;
+    --panel: #1c1f28;
+    --panel2: #242834;
+    --line: #2e3340;
+    --text: #e7eaf0;
+    --muted: #9aa3b2;
+    --accent: #6ea8fe;
+    --danger: #ff5c5c;
+    --tabH: 42px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+  }
+  .app { display: flex; align-items: flex-start; gap: 18px; padding: 18px; min-height: 100vh; }
+  .stage { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; gap: 14px; min-width: 0; }
+  h1 { font-size: 18px; font-weight: 600; margin: 0; letter-spacing: 0.2px; }
+  .stageHead { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .stageHead .sub { color: var(--muted); font-size: 12px; }
+  .canvasWrap { display: flex; justify-content: center; width: 100%; }
+  .canvasBox {
+    position: relative; width: 100%; max-width: 1280px; overflow: hidden; border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45); background: #000; cursor: crosshair;
+  }
+  .canvasBox svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .panel {
+    flex: 0 0 340px; width: 340px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px; max-height: calc(100vh - 36px); overflow-y: auto;
+  }
+  .group { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; background: var(--panel2); overflow: hidden; }
+  .group > .ghead { padding: 10px 12px; user-select: none; background: rgba(255,255,255,0.02); font-weight: 600; }
+  .group > .gbody { padding: 10px 12px; }
+  .row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .row:last-child { margin-bottom: 0; }
+  .row.hidden { display: none; }
+  .row label { flex: 0 0 110px; color: var(--muted); font-size: 12px; }
+  .row .val { flex: 0 0 42px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text); font-size: 12px; }
+  /* editable numeric / hex fields */
+  .row input.val, input.val {
+    flex: 0 0 56px; width: 56px; text-align: right; background: var(--bg); color: var(--text);
+    border: 1px solid var(--line); border-radius: 5px; padding: 3px 5px; font-size: 12px; font-variant-numeric: tabular-nums;
+  }
+  input.val::-webkit-inner-spin-button, input.val::-webkit-outer-spin-button { opacity: 0.35; }
+  .row input.swatchHex, .colorItem input.swatchHex, input.swatchHex {
+    flex: 1 1 auto; min-width: 0; background: var(--bg); color: var(--muted);
+    border: 1px solid var(--line); border-radius: 5px; padding: 3px 6px; font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  input.val:focus, input.swatchHex:focus { outline: none; border-color: var(--accent); color: var(--text); }
+  input[type=range] { flex: 1 1 auto; width: 100%; accent-color: var(--accent); }
+  input[type=color] { width: 30px; height: 26px; padding: 0; border: 1px solid var(--line); background: none; border-radius: 5px; cursor: pointer; }
+  select, input[type=text] {
+    background: var(--bg); color: var(--text); border: 1px solid var(--line);
+    border-radius: 6px; padding: 5px 7px; font-size: 13px; flex: 1 1 auto; min-width: 0;
+  }
+  button { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 7px; padding: 7px 10px; font-size: 13px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #0b1020; border-color: var(--accent); font-weight: 600; }
+  button.small { padding: 4px 8px; font-size: 12px; }
+  .btnRow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .colorList { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+  .colorItem { display: flex; align-items: center; gap: 6px; }
+  .colorItem .swatchHex { flex: 1 1 auto; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .switch { display: flex; align-items: center; gap: 8px; }
+  .pillRow { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill { padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; font-size: 12px; }
+  .pill.active { background: var(--accent); color: #0b1020; border-color: var(--accent); font-weight: 600; }
+  .hint { color: var(--muted); font-size: 11px; line-height: 1.4; margin-top: 6px; }
+  #errBox {
+    display: none; margin-top: 12px; border: 1px solid var(--danger); border-radius: 8px;
+    background: rgba(255,92,92,0.08); color: #ffd7d7; padding: 10px 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px;
+    max-height: 220px; overflow: auto; white-space: pre-wrap; word-break: break-word;
+  }
+  #errBox.show { display: block; }
+  #errBox .errHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-weight: 700; color: var(--danger); }
+  .toast {
+    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+    background: #0b1020; color: #fff; border: 1px solid var(--accent); padding: 9px 16px;
+    border-radius: 8px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 50;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ===================== Tabs ===================== */
+  #tabBar {
+    display: flex; align-items: center; gap: 14px; padding: 8px 18px;
+    background: var(--panel); border-bottom: 1px solid var(--line); height: var(--tabH);
+  }
+  .tabBrand { color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: .2px; }
+  .tabPills { display: flex; gap: 6px; }
+  .tabBtn { padding: 7px 18px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); font-size: 13px; }
+  .tabBtn.active { background: var(--accent); color: #0b1020; border-color: var(--accent); font-weight: 600; }
+  .app.hidden { display: none; }
+  .app { min-height: calc(100vh - var(--tabH)); }
+  .panel { max-height: calc(100vh - 36px - var(--tabH)); }
+
+  /* ===================== Collate: preview ===================== */
+  #collateBox {
+    position: relative; width: 100%; max-width: 1280px; aspect-ratio: 16 / 9; overflow: hidden;
+    border-radius: 10px; border: 1px solid var(--line); background: #000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  }
+  #collateBox .colBg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #colSlideOverlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 3; }
+  .colOverlayImg { max-width: 80%; max-height: 80%; width: auto; height: auto; object-fit: contain; display: block; border-radius: 8px; box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+  #colAspectNote {
+    position: absolute; left: 10px; bottom: 10px; z-index: 4; display: none;
+    font-size: 11px; color: var(--muted); background: rgba(11,16,32,.78);
+    border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px;
+  }
+  #colAspectNote.show { display: block; }
+  /* the fixed memory meter sits bottom-left; keep strip content clear of it */
+  #viewCollate .stage { padding-bottom: 34px; }
+  #colPreviewLabel { width: 100%; max-width: 1280px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  #colErrChip { width: 100%; max-width: 1280px; display: none; color: var(--danger); font-size: 11px; }
+  #colErrChip.show { display: block; }
+
+  /* ===================== Collate: ordering strip ===================== */
+  #stripWrap { width: 100%; max-width: 1280px; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  .stripHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .stripHead .stripTitle { font-size: 12px; font-weight: 600; }
+  #slideStrip { display: flex; align-items: stretch; overflow-x: auto; padding: 6px 2px; scrollbar-width: thin; }
+  #slideStrip.dragOver { outline: 2px dashed var(--accent); outline-offset: -4px; border-radius: 8px; }
+  .slideCard {
+    position: relative; flex: 0 0 auto; width: 148px; display: flex; flex-direction: column; gap: 4px;
+    padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); cursor: pointer;
+  }
+  .slideCard:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .slideCard.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .slideCard.dragging { opacity: .4; }
+  .cardThumb {
+    position: relative; width: 132px; height: 74px; border-radius: 6px; overflow: hidden;
+    background-color: #0b1020; background-size: cover; background-position: center;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .thumbImg { max-width: 80%; max-height: 80%; width: auto; height: auto; object-fit: contain; display: block; border-radius: 3px; box-shadow: 0 3px 8px rgba(0,0,0,.55); }
+  .blankTag { font-size: 11px; color: var(--muted); }
+  .cardIdx { position: absolute; top: 3px; left: 3px; z-index: 2; font-size: 10px; font-variant-numeric: tabular-nums; background: #0b1020cc; color: var(--text); border-radius: 4px; padding: 1px 5px; }
+  .cardName { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cardSize { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .cardBtn {
+    position: absolute; z-index: 3; opacity: 0; transition: opacity .12s;
+    border: 1px solid var(--line); background: #0b1020e0; color: var(--text);
+    border-radius: 5px; padding: 0 5px; font-size: 12px; line-height: 18px; cursor: pointer;
+  }
+  .slideCard:hover .cardBtn, .slideCard:focus-within .cardBtn, .slideCard.selected .cardBtn { opacity: 1; }
+  .cardRemove { top: 3px; right: 3px; }
+  .cardRemove:hover { border-color: var(--danger); color: var(--danger); }
+  .cardLeft { left: 3px; bottom: 3px; }
+  .cardRight { right: 3px; bottom: 3px; }
+  .insertGap { flex: 0 0 14px; align-self: stretch; display: flex; align-items: center; justify-content: center; cursor: pointer; background: none; border: 0; padding: 0; }
+  .insertGap .gapMark { width: 2px; height: 0; border-radius: 2px; background: var(--accent); opacity: 0; transition: opacity .12s, height .12s; }
+  .insertGap:hover { flex-basis: 26px; }
+  .insertGap:hover .gapMark, .insertGap:focus-visible .gapMark, .insertGap.gapActive .gapMark { opacity: 1; height: 70%; }
+  #stripEmpty {
+    flex: 0 0 auto; width: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; border: 1.5px dashed var(--line); border-radius: 8px; color: var(--muted);
+    font-size: 11px; text-align: center; padding: 10px; margin: 0 4px;
+  }
+  #stripEmpty b { color: var(--text); font-size: 12px; font-weight: 600; }
+  .slideCard.loading .cardThumb::after {
+    content: ""; position: absolute; inset: 0; z-index: 2;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.10), transparent);
+    animation: shimmer 1.1s linear infinite;
+  }
+  @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+  @media (prefers-reduced-motion: reduce) {
+    .slideCard.loading .cardThumb::after { animation: none; background: rgba(255,255,255,.06); }
+  }
+
+  /* ===================== Collate: add images ===================== */
+  #dropZone {
+    height: 88px; border: 1.5px dashed var(--line); border-radius: 10px; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    cursor: pointer; text-align: center; padding: 8px;
+  }
+  #dropZone .dzMain { font-size: 13px; color: var(--text); }
+  #dropZone .dzSub { font-size: 11px; color: var(--muted); }
+  #dropZone.dragHint { border-color: var(--accent); }
+  #dropZone.dragOver { border-color: var(--accent); background: rgba(110,168,254,0.08); }
+  #uploadErrs {
+    display: none; margin-top: 8px; border: 1px solid var(--danger); border-radius: 8px;
+    background: rgba(255,92,92,0.08); color: #ffd7d7; padding: 8px 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px;
+    max-height: 150px; overflow: auto;
+  }
+  #uploadErrs.show { display: block; }
+  .uploadErr { margin-bottom: 4px; word-break: break-word; }
+  #deckWarn { display: none; margin-top: 8px; border-radius: 8px; padding: 8px 10px; font-size: 11px; line-height: 1.4; }
+  #deckWarn.show { display: block; }
+  #deckWarn.info { border: 1px solid var(--line); background: rgba(255,255,255,0.03); color: var(--muted); }
+  #deckWarn.warn { border: 1px solid #e0aa4e; background: rgba(224,170,78,.08); color: #ffd27a; }
+  #deckWarn.danger { border: 1px solid var(--danger); background: rgba(255,92,92,0.08); color: #ffd7d7; }
+
+  /* ===================== Memory meter ===================== */
+  #memMeter {
+    position: fixed; left: 12px; bottom: 12px; z-index: 40; display: flex; align-items: center;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px;
+    font-variant-numeric: tabular-nums; color: var(--muted); box-shadow: 0 4px 14px rgba(0,0,0,.35);
+  }
+  .memDot { width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; background: #3fb950; flex: 0 0 auto; }
+  #memMeter.warn { color: #ffd27a; border-color: #e0aa4e; }
+  #memMeter.warn .memDot { background: #e0aa4e; }
+  #memMeter.danger { color: #ffd7d7; border-color: var(--danger); }
+  #memMeter.danger .memDot { background: var(--danger); }
+</style>
+</head>
+<body>
+<div id="tabBar">
+  <span class="tabBrand">Slide Background Studio</span>
+  <div class="tabPills" role="tablist">
+    <button class="tabBtn active" id="tabDesignBtn" role="tab" aria-selected="true">Design</button>
+    <button class="tabBtn" id="tabCollateBtn" role="tab" aria-selected="false">Collate</button>
+  </div>
+</div>
+<div class="app" id="viewDesign">
+  <!-- LEFT: PREVIEW STAGE -->
+  <div class="stage">
+    <div class="stageHead">
+      <div>
+        <h1>Design</h1>
+        <div class="sub">Flat-surface-shaded low-poly mesh + blobs. Move the cursor over the preview to light it.</div>
+      </div>
+    </div>
+    <div class="canvasWrap">
+      <div class="canvasBox" id="canvasBox">
+        <svg id="polySvg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"></svg>
+        <svg id="blobSvg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+    <div id="errBox">
+      <div class="errHead">
+        <span>Error log</span>
+        <span>
+          <button class="small" id="copyErrBtn">Copy error log</button>
+          <button class="small" id="clearErrBtn">Clear</button>
+        </span>
+      </div>
+      <div id="errContent"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: CONTROL PANEL -->
+  <div class="panel" id="panel">
+
+    <div class="group">
+      <div class="ghead">Canvas</div>
+      <div class="gbody">
+        <div class="row">
+          <label>Aspect</label>
+          <div class="pillRow" id="aspectPills">
+            <div class="pill active" data-aspect="16:9">16:9</div>
+            <div class="pill" data-aspect="4:3">4:3</div>
+            <div class="pill" data-aspect="3:2">3:2</div>
+            <div class="pill" data-aspect="1:1">1:1</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="ghead">Background</div>
+      <div class="gbody">
+        <div class="row">
+          <label>Base style</label>
+          <select id="bgStyle">
+            <option value="poly">Low-poly mesh</option>
+            <option value="orbs">Soft mesh / orbs</option>
+            <option value="dots">Dot grid</option>
+            <option value="lines">Line grid</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Background</label>
+          <input type="color" id="bgColor" value="#080b1a">
+          <span class="swatchHex" id="bgColorHex">#080b1a</span>
+        </div>
+        <div class="row">
+          <label>Palette</label>
+          <div class="pillRow" id="palettePills"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="group" id="grpPoly">
+      <div class="ghead">Low-poly mesh</div>
+      <div class="gbody">
+        <div class="row">
+          <label>Color mode</label>
+          <select id="polyMode">
+            <option value="fss">FSS lighting</option>
+            <option value="hybrid">Hybrid (gradient + light)</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Density</label>
+          <input type="range" id="polyDensity" min="20" max="700" step="10" value="240">
+          <span class="val" id="polyDensityVal">240</span>
+        </div>
+        <div class="row">
+          <label>Edge thickness</label>
+          <input type="range" id="polyEdge" min="0" max="4" step="0.1" value="0">
+          <span class="val" id="polyEdgeVal">0</span>
+        </div>
+        <div class="row" id="polyBaseRow">
+          <label>Mesh base</label>
+          <input type="color" id="polyBase" value="#7a8290">
+          <span class="swatchHex" id="polyBaseHex">#7a8290</span>
+        </div>
+        <div id="polyGradientWrap" class="hidden">
+          <div class="colorList" id="polyColors"></div>
+          <div class="btnRow"><button class="small" id="polyAddColor">+ Gradient color</button></div>
+        </div>
+        <div class="btnRow" style="margin-top:8px;">
+          <button class="small" id="polyShuffle">Shuffle points</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="group" id="grpLight">
+      <div class="ghead">FSS light</div>
+      <div class="gbody">
+        <div class="row">
+          <label>Motion</label>
+          <select id="lightMotion">
+            <option value="follow">Follow cursor</option>
+            <option value="drift">Auto-drift (bounce)</option>
+            <option value="static">Static (centre)</option>
+          </select>
+        </div>
+        <div class="row" id="lightSpeedRow">
+          <label>Drift speed</label>
+          <input type="range" id="lightSpeed" min="1" max="100" step="1" value="35">
+          <span class="val" id="lightSpeedVal">35</span>
+        </div>
+        <div class="row">
+          <label>Ambient</label>
+          <input type="color" id="lightAmbient" value="#241a40">
+          <span class="swatchHex" id="lightAmbientHex">#241a40</span>
+        </div>
+        <div class="row">
+          <label>Diffuse</label>
+          <input type="color" id="lightDiffuse" value="#ff9d5c">
+          <span class="swatchHex" id="lightDiffuseHex">#ff9d5c</span>
+        </div>
+        <div class="row">
+          <label>Distance</label>
+          <input type="range" id="lightDistance" min="40" max="1400" step="10" value="230">
+          <span class="val" id="lightDistanceVal">230</span>
+        </div>
+        <div class="row">
+          <label>Intensity</label>
+          <input type="range" id="lightIntensity" min="0" max="250" step="1" value="120">
+          <span class="val" id="lightIntensityVal">120</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="group" id="grpOrbs">
+      <div class="ghead">Soft mesh / orbs</div>
+      <div class="gbody">
+        <div class="colorList" id="orbColors"></div>
+        <div class="btnRow" style="margin-bottom:10px;">
+          <button class="small" id="orbAddColor">+ Colour</button>
+        </div>
+        <div class="row">
+          <label>Count</label>
+          <input type="range" id="orbCount" min="1" max="14" step="1" value="6">
+          <span class="val" id="orbCountVal">6</span>
+        </div>
+        <div class="row">
+          <label>Size</label>
+          <input type="range" id="orbSize" min="15" max="120" step="1" value="55">
+          <span class="val" id="orbSizeVal">55</span>
+        </div>
+        <div class="row">
+          <label>Softness</label>
+          <input type="range" id="orbSoftness" min="0" max="100" step="1" value="72">
+          <span class="val" id="orbSoftnessVal">72</span>
+        </div>
+        <div class="row">
+          <label>Blend</label>
+          <select id="orbBlend"></select>
+        </div>
+        <div class="row switch">
+          <label>Drift</label>
+          <input type="checkbox" id="orbDrift" checked>
+        </div>
+        <div class="row" id="orbSpeedRow">
+          <label>Drift speed</label>
+          <input type="range" id="orbSpeed" min="1" max="100" step="1" value="16">
+          <span class="val" id="orbSpeedVal">16</span>
+        </div>
+        <div class="btnRow"><button class="small" id="orbShuffle">Shuffle</button></div>
+      </div>
+    </div>
+
+    <div class="group" id="grpGrid">
+      <div class="ghead">Grid</div>
+      <div class="gbody">
+        <div class="row">
+          <label>Line / dot</label>
+          <input type="color" id="gridColor" value="#2f3d63">
+          <span class="swatchHex" id="gridColorHex">#2f3d63</span>
+        </div>
+        <div class="row">
+          <label>Tint</label>
+          <input type="color" id="gridTint" value="#0b1730">
+          <span class="swatchHex" id="gridTintHex">#0b1730</span>
+        </div>
+        <div class="row">
+          <label>Spacing</label>
+          <input type="range" id="gridSpacing" min="16" max="140" step="1" value="46">
+          <span class="val" id="gridSpacingVal">46</span>
+        </div>
+        <div class="row" id="gridThickRow">
+          <label>Thickness</label>
+          <input type="range" id="gridThickness" min="0.5" max="5" step="0.1" value="1.4">
+          <span class="val" id="gridThicknessVal">1.4</span>
+        </div>
+        <div class="row" id="gridDotRow">
+          <label>Dot size</label>
+          <input type="range" id="gridDot" min="0.5" max="6" step="0.1" value="1.8">
+          <span class="val" id="gridDotVal">1.8</span>
+        </div>
+        <div class="row">
+          <label>Edge fade</label>
+          <input type="range" id="gridFade" min="0" max="100" step="1" value="55">
+          <span class="val" id="gridFadeVal">55</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="group" id="grpBlob">
+      <div class="ghead">Blob overlay</div>
+      <div class="gbody">
+        <div class="row switch">
+          <label>Enable blobs</label>
+          <input type="checkbox" id="blobEnabled" checked>
+        </div>
+        <div class="row">
+          <label>Position</label>
+          <div class="pillRow" id="blobOrient">
+            <div class="pill active" data-orient="nwse">NW → SE</div>
+            <div class="pill" data-orient="nesw">NE → SW</div>
+          </div>
+        </div>
+        <div class="row switch">
+          <label>Fixed ends</label>
+          <input type="checkbox" id="blobFixedEnds" checked>
+        </div>
+        <div class="row">
+          <label>Top edge %</label>
+          <input type="range" id="blobTop" min="0" max="100" step="1" value="45">
+          <span class="val" id="blobTopVal">45</span>
+        </div>
+        <div class="row">
+          <label>Right edge %</label>
+          <input type="range" id="blobRight" min="0" max="100" step="1" value="60">
+          <span class="val" id="blobRightVal">60</span>
+        </div>
+        <div class="row">
+          <label>Bottom edge %</label>
+          <input type="range" id="blobBottom" min="0" max="100" step="1" value="60">
+          <span class="val" id="blobBottomVal">60</span>
+        </div>
+        <div class="row">
+          <label>Left edge %</label>
+          <input type="range" id="blobLeft" min="0" max="100" step="1" value="45">
+          <span class="val" id="blobLeftVal">45</span>
+        </div>
+        <div class="row">
+          <label>Blob color</label>
+          <input type="color" id="blobColor" value="#fbae3c">
+          <span class="swatchHex" id="blobColorHex">#fbae3c</span>
+        </div>
+        <div class="row">
+          <label>Color steps</label>
+          <input type="range" id="blobSteps" min="1" max="6" step="1" value="1">
+          <span class="val" id="blobStepsVal">1</span>
+        </div>
+        <div class="row">
+          <label>Complexity</label>
+          <input type="range" id="blobComplexity" min="1" max="14" step="1" value="3">
+          <span class="val" id="blobComplexityVal">3</span>
+        </div>
+        <div class="row">
+          <label>Contrast</label>
+          <input type="range" id="blobContrast" min="0" max="100" step="1" value="35">
+          <span class="val" id="blobContrastVal">35</span>
+        </div>
+        <div class="row">
+          <label>Gap</label>
+          <input type="range" id="blobGap" min="0" max="100" step="1" value="30">
+          <span class="val" id="blobGapVal">30</span>
+        </div>
+        <div class="btnRow">
+          <button class="small" id="blobShuffle">Shuffle shape</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="ghead">Compositing</div>
+      <div class="gbody">
+        <div class="row switch">
+          <label>Show overlay</label>
+          <input type="checkbox" id="compEnabled" checked>
+        </div>
+        <div class="row">
+          <label>Top layer</label>
+          <select id="topLayer">
+            <option value="blob">Blob over poly</option>
+            <option value="poly">Poly over blob</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Blend mode</label>
+          <select id="blendMode"></select>
+        </div>
+        <div class="row">
+          <label>Top opacity</label>
+          <input type="range" id="topOpacity" min="0" max="100" step="1" value="100">
+          <span class="val" id="topOpacityVal">100</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="ghead">Export</div>
+      <div class="gbody">
+        <div class="btnRow">
+          <button class="primary" id="copyHtmlBtn">Copy full slide HTML</button>
+          <button class="small" id="throwTestBtn">Throw test error</button>
+        </div>
+        <div class="btnRow" style="margin-top:8px;">
+          <button class="small" id="copySettingsBtn">Copy settings</button>
+          <button class="small" id="loadSettingsBtn">Load settings…</button>
+        </div>
+        <div class="row" id="presetRow" style="margin-top:8px;">
+          <label>Presets</label>
+          <div class="pillRow" id="presetButtons"></div>
+        </div>
+        <div class="hint">"Copy full slide HTML" copies a self-contained &lt;div&gt; (zero dependencies); with a
+          moving light it includes a tiny inline script so it animates on your slides too.<br>
+          "Copy settings" puts this config on the clipboard as JSON — save a few, then "Load settings" (or hand
+          one to me) to switch between them.</div>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="ghead">Slide deck</div>
+      <div class="gbody">
+        <div class="btnRow">
+          <button class="primary" id="gotoCollateBtn">Assemble deck in Collate →</button>
+        </div>
+        <div class="btnRow" style="margin-top:8px;">
+          <button class="small" id="deckSnippetBtn">Copy deck snippet</button>
+        </div>
+        <div class="hint">Deck building moved to the Collate tab — add images, set the order, download.
+          "Copy deck snippet" still gives just the background &lt;div&gt; + script to paste behind your own
+          full-screen slides (sized to your current Collate slide count).</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="app hidden" id="viewCollate">
+  <!-- LEFT: COLLATE STAGE -->
+  <div class="stage">
+    <div class="stageHead">
+      <div>
+        <h1>Collate</h1>
+        <div class="sub">Order your images over the live background, then bake everything into one seamless deck.</div>
+      </div>
+    </div>
+    <div class="canvasWrap">
+      <div id="collateBox">
+        <img class="colBg" id="colBgBase" alt="">
+        <img class="colBg" id="colBgTop" alt="">
+        <div id="colSlideOverlay"></div>
+        <div id="colAspectNote">Deck bakes at 16:9 (1920×1080) — preview shown at deck aspect.</div>
+      </div>
+    </div>
+    <div id="colPreviewLabel">Slide 1 of 2 — blank</div>
+
+    <div id="stripWrap">
+      <div class="stripHead">
+        <span class="stripTitle">Slide order</span>
+        <div class="btnRow">
+          <button class="small" id="addBlankEndBtn">+ Blank slide</button>
+          <button class="small" id="resetOrderBtn">Reset order</button>
+        </div>
+      </div>
+      <div id="slideStrip"></div>
+    </div>
+
+    <div id="colErrChip">⚠ errors logged — see Design tab</div>
+  </div>
+
+  <!-- RIGHT: COLLATE PANEL -->
+  <div class="panel">
+
+    <div class="group">
+      <div class="ghead">Add images</div>
+      <div class="gbody">
+        <div id="dropZone">
+          <div class="dzMain">Drop images here</div>
+          <div class="dzSub">or click to choose — JPG, PNG, WebP, GIF</div>
+        </div>
+        <input type="file" id="fileInput" multiple accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+        <div class="btnRow" style="margin-top:8px;">
+          <button class="small" id="filePickBtn">Choose images…</button>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <label>Bake quality</label>
+          <div class="pillRow" id="qualityPills">
+            <button class="pill" data-q="orig">Original</button>
+            <button class="pill active" data-q="high">High</button>
+            <button class="pill" data-q="med">Medium</button>
+          </div>
+        </div>
+        <div id="uploadErrs"></div>
+        <div class="btnRow" style="margin-top:6px;">
+          <button class="small" id="uploadErrsClear" hidden>Dismiss</button>
+        </div>
+        <div class="hint">Images are baked into the deck as data URIs, so the file is fully self-contained — your
+          work isn't saved anywhere until you download the deck. Quality applies to every image, including ones
+          already added — switching re-encodes them from the originals. "High" keeps things crisp at 1080p
+          without ballooning the download. Drop more files any time; they slot in by filename.</div>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="ghead">Selected slide</div>
+      <div class="gbody" id="selBody">
+        <div class="row"><label>File</label><span class="val" id="selFileVal" style="flex:1 1 auto;text-align:left;">—</span></div>
+        <div class="row hidden" id="selAltRow"><label>Alt text</label><input type="text" id="altInput"></div>
+        <div class="btnRow"><button class="small" id="selRemoveBtn">Remove slide</button></div>
+        <div class="hint" id="selHint">Click a card in the strip to preview it here and edit its details.</div>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="ghead">Deck</div>
+      <div class="gbody">
+        <div class="row"><label>Slides</label><span class="val" id="deckCountVal" style="flex:1 1 auto;text-align:right;">2 (0 images, 2 blank)</span></div>
+        <div class="row"><label>Est. size</label><span class="val" id="deckSizeVal" style="flex:1 1 auto;text-align:right;">—</span></div>
+        <div id="deckWarn"></div>
+        <div class="hint" id="deckStyleHint" style="display:none;">Deck backgrounds currently use the Low-poly style;
+          Orbs/Dots/Lines apply to the single-slide export only.</div>
+        <div class="btnRow" style="margin-top:8px;">
+          <button class="primary" id="collateDownloadBtn">Download deck (.html)</button>
+        </div>
+        <div class="hint">Bakes your slides into one standalone .html: a continuous "river" background flowing across
+          every boundary, images floating on rounded cards, gentle per-slide light — no hard lines, nothing to
+          install. Wheel / arrow / space / swipe = one slide.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="memMeter" title="Images = memory held by the processed image data (base64 in memory is ~2× the size it takes in the downloaded file). Heap = this tab's total JavaScript memory, reported by Chrome only. Originals stay on disk — they're re-read when you change quality."><span class="memDot"></span><span id="memText">Images 0 B</span></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+(function () {
+
+  /* ===================== Error reporting ===================== */
+  var errors = [];
+  var errBox = document.getElementById("errBox");
+  var errContent = document.getElementById("errContent");
+
+  function logErr(label, e) {
+    var msg = (e && e.stack) ? e.stack : (e && e.message) ? e.message : String(e);
+    var line = "[" + new Date().toLocaleTimeString() + "] " + (label || "error") + ": " + msg;
+    errors.push(line);
+    if (errContent) { var div = document.createElement("div"); div.textContent = line; errContent.appendChild(div); }
+    if (errBox) errBox.classList.add("show");
+    try { console.error(label || "error", e); } catch (ignore) {}
+  }
+  function guard(fn, label) {
+    return function () {
+      try { return fn.apply(this, arguments); }
+      catch (e) { logErr(label || (fn && fn.name) || "handler", e); }
+    };
+  }
+  window.addEventListener("error", function (ev) { logErr("window.error", ev.error || ev.message || ev); });
+  window.addEventListener("unhandledrejection", function (ev) { logErr("unhandledrejection", ev.reason || ev); });
+
+  /* ===================== Utilities ===================== */
+  function $(id) { return document.getElementById(id); }
+  function toast(msg) {
+    var t = $("toast"); if (!t) return;
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(t._timer); t._timer = setTimeout(function () { t.classList.remove("show"); }, 1800);
+  }
+  function copyText(text, okMsg) {
+    function fallback() {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select(); document.execCommand("copy");
+        document.body.removeChild(ta); toast(okMsg || "Copied");
+      } catch (e) { logErr("copy.fallback", e); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast(okMsg || "Copied"); }, function () { fallback(); });
+    } else { fallback(); }
+  }
+  // Seeded PRNG (LCG).
+  function makeRng(seed) {
+    var state = (seed >>> 0) || 1;
+    return function () { state = (Math.imul(1664525, state) + 1013904223) >>> 0; return state / 4294967296; };
+  }
+  // Color helpers
+  function hexToRgb(hex) {
+    hex = String(hex).replace("#", "");
+    if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+    var n = parseInt(hex, 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+  }
+  function hexToUnit(hex) { var c = hexToRgb(hex); return [c.r/255, c.g/255, c.b/255]; }
+  function chan(v) { v = v < 0 ? 0 : v > 1 ? 1 : v; v = Math.round(v * 255); var s = v.toString(16); return s.length === 1 ? "0" + s : s; }
+  function rgbHex(r, g, b) { return "#" + chan(r) + chan(g) + chan(b); }
+  function sampleGradient(colors, t) {
+    if (!colors.length) return "#888888";
+    if (colors.length === 1) return colors[0];
+    t = Math.max(0, Math.min(1, t));
+    var seg = t * (colors.length - 1), i = Math.floor(seg);
+    if (i >= colors.length - 1) i = colors.length - 2;
+    var f = seg - i, a = hexToRgb(colors[i]), b = hexToRgb(colors[i + 1]);
+    return rgbHex((a.r + (b.r - a.r) * f)/255, (a.g + (b.g - a.g) * f)/255, (a.b + (b.b - a.b) * f)/255);
+  }
+
+  /* ===================== State ===================== */
+  var ASPECTS = { "16:9": 9/16, "4:3": 3/4, "3:2": 2/3, "1:1": 1 };
+  var VIEW_W = 1280;
+  var BLEND_MODES = [
+    "normal","multiply","screen","overlay","darken","lighten",
+    "color-dodge","color-burn","hard-light","soft-light","difference",
+    "exclusion","hue","saturation","color","luminosity"
+  ];
+
+  // Curated dark-first palettes: [background, ...accent colors].
+  var PALETTES = [
+    { name: "Midnight",  bg: "#080b1a", colors: ["#1b2a5e", "#3d5a9e", "#6b4ea8"] },
+    { name: "Deep sea",  bg: "#001220", colors: ["#0e4a52", "#1f6f8b", "#2e8b74"] },
+    { name: "Charcoal",  bg: "#0d0f12", colors: ["#2a2f3a", "#3f4654", "#5a6172"] },
+    { name: "Aurora",    bg: "#04140f", colors: ["#0f5c46", "#1f8a6b", "#3fae8f"] },
+    { name: "Ember",     bg: "#140a08", colors: ["#5e2b1f", "#8b4a2e", "#b07a3f"] },
+    { name: "Plum",      bg: "#120a18", colors: ["#3a1c5e", "#6b3fae", "#a05ccf"] },
+    { name: "Slate blue",bg: "#0a0f18", colors: ["#1b3a5e", "#2f6f9e", "#4e9ec8"] }
+  ];
+
+  var state = {
+    aspect: "16:9",
+    style: "poly",   // poly | orbs | dots | lines
+    poly: { mode: "fss", density: 240, edge: 0, base: "#7a8290",
+            colors: ["#2b1055", "#7597de", "#34e0a1"], seed: 1234 },
+    light: { motion: "follow", speed: 35, ambient: "#241a40", diffuse: "#ff9d5c", distance: 230, intensity: 120,
+             x: VIEW_W / 2, y: (VIEW_W * ASPECTS["16:9"]) / 2, vx: 0.82, vy: 0.57 },
+    orbs: { colors: ["#1b2a5e", "#3d5a9e", "#6b4ea8"], count: 6, size: 55, softness: 72,
+            blend: "screen", drift: true, speed: 16, seed: 4242 },
+    grid: { color: "#2f3d63", spacing: 46, thickness: 1.4, dot: 1.8, tint: "#0b1730", fade: 55, glow: true },
+    blob: { bg: "#080b1a", color: "#fbae3c", orientation: "nwse", fixedEnds: true,
+            top: 45, right: 60, bottom: 60, left: 45,
+            complexity: 2, contrast: 30, gap: 50, steps: 1, seed: 9876, enabled: true },
+    composite: { top: "blob", blend: "screen", opacity: 100, enabled: true }
+  };
+  function viewH() { return Math.round(VIEW_W * ASPECTS[state.aspect]); }
+
+  /* ===================== Delaunay (Bowyer-Watson, sorted incremental) ===================== */
+  // Adapted from the Delaunay triangulation used by FSS demos. Returns a flat
+  // array of vertex-index triplets.
+  var EPS = 1.0 / 1048576.0;
+  function superTriangle(v) {
+    var xmin = Infinity, ymin = Infinity, xmax = -Infinity, ymax = -Infinity, i;
+    for (i = v.length; i--; ) {
+      if (v[i][0] < xmin) xmin = v[i][0];
+      if (v[i][0] > xmax) xmax = v[i][0];
+      if (v[i][1] < ymin) ymin = v[i][1];
+      if (v[i][1] > ymax) ymax = v[i][1];
+    }
+    var dx = xmax - xmin, dy = ymax - ymin, dmax = Math.max(dx, dy),
+        xmid = xmin + dx * 0.5, ymid = ymin + dy * 0.5;
+    return [[xmid - 20*dmax, ymid - dmax], [xmid, ymid + 20*dmax], [xmid + 20*dmax, ymid - dmax]];
+  }
+  function circumcircle(v, i, j, k) {
+    var x1 = v[i][0], y1 = v[i][1], x2 = v[j][0], y2 = v[j][1], x3 = v[k][0], y3 = v[k][1],
+        fy1y2 = Math.abs(y1 - y2), fy2y3 = Math.abs(y2 - y3),
+        xc, yc, m1, m2, mx1, mx2, my1, my2, dx, dy;
+    if (fy1y2 < EPS && fy2y3 < EPS) throw new Error("Coincident points in triangulation");
+    if (fy1y2 < EPS) {
+      m2 = -((x3 - x2) / (y3 - y2)); mx2 = (x2 + x3) / 2; my2 = (y2 + y3) / 2;
+      xc = (x2 + x1) / 2; yc = m2 * (xc - mx2) + my2;
+    } else if (fy2y3 < EPS) {
+      m1 = -((x2 - x1) / (y2 - y1)); mx1 = (x1 + x2) / 2; my1 = (y1 + y2) / 2;
+      xc = (x3 + x2) / 2; yc = m1 * (xc - mx1) + my1;
+    } else {
+      m1 = -((x2 - x1) / (y2 - y1)); m2 = -((x3 - x2) / (y3 - y2));
+      mx1 = (x1 + x2) / 2; mx2 = (x2 + x3) / 2; my1 = (y1 + y2) / 2; my2 = (y2 + y3) / 2;
+      xc = (m1*mx1 - m2*mx2 + my2 - my1) / (m1 - m2);
+      yc = (fy1y2 > fy2y3) ? m1 * (xc - mx1) + my1 : m2 * (xc - mx2) + my2;
+    }
+    dx = x2 - xc; dy = y2 - yc;
+    return { i: i, j: j, k: k, x: xc, y: yc, r: dx*dx + dy*dy };
+  }
+  function dedupEdges(edges) {
+    var i, j, a, b, m, n;
+    for (j = edges.length; j; ) {
+      b = edges[--j]; a = edges[--j];
+      for (i = j; i; ) {
+        n = edges[--i]; m = edges[--i];
+        if ((a === m && b === n) || (a === n && b === m)) { edges.splice(j, 2); edges.splice(i, 2); break; }
+      }
+    }
+  }
+  function triangulate(vertices) {
+    var n = vertices.length, i, j, indices, st, open, closed, edges, dx, dy, a, b, c;
+    if (n < 3) return [];
+    vertices = vertices.slice(0);
+    indices = new Array(n);
+    for (i = n; i--; ) indices[i] = i;
+    indices.sort(function (a, b) { return vertices[b][0] - vertices[a][0]; });
+    st = superTriangle(vertices);
+    vertices.push(st[0], st[1], st[2]);
+    open = [circumcircle(vertices, n + 0, n + 1, n + 2)];
+    closed = []; edges = [];
+    for (i = indices.length; i--; edges.length = 0) {
+      c = indices[i];
+      for (j = open.length; j--; ) {
+        dx = vertices[c][0] - open[j].x;
+        if (dx > 0 && dx * dx > open[j].r) { closed.push(open[j]); open.splice(j, 1); continue; }
+        dy = vertices[c][1] - open[j].y;
+        if (dx*dx + dy*dy - open[j].r > EPS) continue;
+        edges.push(open[j].i, open[j].j, open[j].j, open[j].k, open[j].k, open[j].i);
+        open.splice(j, 1);
+      }
+      dedupEdges(edges);
+      for (j = edges.length; j; ) { b = edges[--j]; a = edges[--j]; open.push(circumcircle(vertices, a, b, c)); }
+    }
+    for (i = open.length; i--; ) closed.push(open[i]);
+    open.length = 0;
+    for (i = closed.length; i--; )
+      if (closed[i].i < n && closed[i].j < n && closed[i].k < n)
+        open.push(closed[i].i, closed[i].j, closed[i].k);
+    return open;
+  }
+
+  /* ===================== Mesh generation (FSS.Plane style) ===================== */
+  // Random interior points + fixed & random perimeter points so there are no
+  // holes at the edges. Cached; only rebuilt when density / seed / aspect change.
+  var polyMesh = null;       // array of { p0,p1,p2, cx,cy, t }
+  var polyMeshKey = "";
+
+  function buildMesh(W, H) {
+    var p = state.poly;
+    var key = p.density + "|" + p.seed + "|" + W + "x" + H;
+    if (polyMesh && polyMeshKey === key) return polyMesh;
+    var rng = makeRng(p.seed);
+    var count = Math.max(8, Math.round(p.density));
+    var pts = [];
+    for (var i = 0; i < count; i++) pts.push([rng() * W, rng() * H]);
+    // fixed perimeter
+    pts.push([0,0],[W/2,0],[W,0],[W,H/2],[W,H],[W/2,H],[0,H],[0,H/2]);
+    // random perimeter points
+    var edgeN = Math.max(4, Math.round(count / 12));
+    for (var e = 0; e < edgeN; e++) {
+      pts.push([rng() * W, 0]); pts.push([rng() * W, H]);
+      pts.push([0, rng() * H]); pts.push([W, rng() * H]);
+    }
+    var tris = triangulate(pts);
+    var mesh = [];
+    for (var z = 0; z < tris.length; z += 3) {
+      var a = pts[tris[z]], b = pts[tris[z + 1]], c = pts[tris[z + 2]];
+      var cx = (a[0] + b[0] + c[0]) / 3, cy = (a[1] + b[1] + c[1]) / 3;
+      mesh.push({ p0: a, p1: b, p2: c, cx: cx, cy: cy, t: (cx / W) * 0.6 + (cy / H) * 0.4 });
+    }
+    polyMesh = mesh; polyMeshKey = key;
+    return mesh;
+  }
+
+  /* ===================== FSS shading ===================== */
+  // The mesh lies in the z=0 plane, so every triangle normal is (0,0,1) and
+  // illuminance reduces to lightZ / distance(light, centroid) — a faceted
+  // spotlight that brightens triangles near the cursor.
+  // color = clamp01( albedoAmbient ⊙ lightAmbient + albedoDiffuse ⊙ lightDiffuse · illum · intensity )
+  // FSS mode:    albedoAmbient = meshBase, albedoDiffuse = white
+  // Hybrid mode: albedoAmbient = albedoDiffuse = gradient(centroid)
+  function shadePoly(W, H, lx, ly, collect) {
+    var p = state.poly, L = state.light, mesh = buildMesh(W, H);
+    var amb = hexToUnit(L.ambient), dif = hexToUnit(L.diffuse), base = hexToUnit(p.base);
+    var lz = L.distance, inten = L.intensity / 100, edge = p.edge, hybrid = (p.mode === "hybrid");
+    var out = [], data = collect ? [] : null;
+    for (var i = 0; i < mesh.length; i++) {
+      var tr = mesh[i], cx = tr.cx, cy = tr.cy;
+      var dx = lx - cx, dy = ly - cy, dist = Math.sqrt(dx*dx + dy*dy + lz*lz) || 1, illum = lz / dist;
+      var aA, aD, surf = null;
+      if (hybrid) { surf = hexToUnit(sampleGradient(p.colors, tr.t)); aA = surf; aD = surf; }
+      else { aA = base; aD = [1, 1, 1]; }
+      var r = aA[0]*amb[0] + aD[0]*dif[0]*illum*inten;
+      var g = aA[1]*amb[1] + aD[1]*dif[1]*illum*inten;
+      var b = aA[2]*amb[2] + aD[2]*dif[2]*illum*inten;
+      var fill = rgbHex(r, g, b);
+      // edge 0 = seamless: stroke each triangle with its own fill (wide enough
+      // to cover the sub-pixel gaps between adjacent facets). edge > 0 = dark edges.
+      var stroke = edge > 0 ? "#0a0d14" : fill;
+      var sw = edge > 0 ? edge : 1.5;
+      var d = "M" + tr.p0[0].toFixed(1) + "," + tr.p0[1].toFixed(1) +
+              "L" + tr.p1[0].toFixed(1) + "," + tr.p1[1].toFixed(1) +
+              "L" + tr.p2[0].toFixed(1) + "," + tr.p2[1].toFixed(1) + "Z";
+      out.push('<path d="' + d + '" fill="' + fill + '" stroke="' + stroke +
+               '" stroke-width="' + sw + '" stroke-linejoin="round"/>');
+      if (collect) {
+        if (hybrid) data.push([Math.round(cx), Math.round(cy),
+          Math.round(surf[0]*255), Math.round(surf[1]*255), Math.round(surf[2]*255)]);
+        else data.push([Math.round(cx), Math.round(cy)]);
+      }
+    }
+    return collect ? { inner: out.join(""), data: data } : out.join("");
+  }
+
+  /* ===================== Blob layer =====================
+     Two "corner blobs" sitting in opposite corners — think of a big round
+     blob mostly off-screen in the corner, of which only ~25% is visible.
+     Each blob touches its two adjacent edges at FIXED contact points and
+     bulges toward the canvas centre; the bg shows through the diagonal
+     channel between the two blobs.
+       - Top/Right/Bottom/Left % = where each blob meets that edge (fixed)
+       - Complexity = number of anchor points along the bulged boundary
+       - Contrast   = how far the boundary swings at each anchor (amplitude)
+       - Gap        = how far the blobs bulge inward (more gap = wider channel)
+       - Fixed ends = pin the contact points (off = shuffle may jitter them)
+       - Color steps= concentric bands graded from the blob colour toward bg
+     NW->SE: blobs in bottom-left & top-right.  NE->SW: top-left & bottom-right.
+  */
+  function f2(v) { return v.toFixed(2); }
+  // Catmull-Rom -> cubic Bezier "C" commands through pts (open curve; assumes
+  // the current point is already pts[0]).
+  function smoothCurves(pts) {
+    var n = pts.length, d = "";
+    for (var i = 0; i < n - 1; i++) {
+      var p0 = pts[i > 0 ? i - 1 : 0], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2 < n ? i + 2 : n - 1];
+      var c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+      var c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += "C" + f2(c1x) + "," + f2(c1y) + " " + f2(c2x) + "," + f2(c2y) + " " + f2(p2[0]) + "," + f2(p2[1]) + " ";
+    }
+    return d;
+  }
+  function mixHex(a, b, t) {
+    var ca = hexToRgb(a), cb = hexToRgb(b);
+    return rgbHex((ca.r + (cb.r - ca.r) * t) / 255, (ca.g + (cb.g - ca.g) * t) / 255, (ca.b + (cb.b - ca.b) * t) / 255);
+  }
+  // ov (optional): per-call overrides of state.blob fields, plus { noBg:true }
+  // to skip the background rect — used by the deck to stack slices.
+  function buildBlobSvg(W, H, ov) {
+    var b = ov ? Object.assign({}, state.blob, ov) : state.blob;
+    var rng = makeRng(b.seed), parts = [];
+    if (!(ov && ov.noBg)) parts.push('<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="' + b.bg + '"/>');
+
+    var minDim = Math.min(W, H), nwse = (b.orientation !== "nesw");
+    // Fixed contact points (one per edge). When fixed-ends is off, shuffle
+    // jitters them along their edge.
+    function jit() { return b.fixedEnds ? 0 : (rng() * 2 - 1) * 0.12; }
+    function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+    var Ptop    = [clamp01(b.top / 100 + jit()) * W, 0];
+    var Pright  = [W, clamp01(b.right / 100 + jit()) * H];
+    var Pbottom = [clamp01(b.bottom / 100 + jit()) * W, H];
+    var Pleft   = [0, clamp01(b.left / 100 + jit()) * H];
+
+    // Each blob: two contact points (boundary endpoints) + its corner.
+    var blobs = nwse
+      ? [ { p0: Pleft, p1: Pbottom, corner: [0, H] },   // bottom-left
+          { p0: Ptop,  p1: Pright,  corner: [W, 0] } ]   // top-right
+      : [ { p0: Ptop,  p1: Pleft,   corner: [0, 0] },    // top-left
+          { p0: Pright, p1: Pbottom, corner: [W, H] } ];  // bottom-right
+
+    var segs = Math.max(1, Math.round(b.complexity)) + 1;
+    var amp = (b.contrast / 100) * minDim * 0.30;
+    // Gap up => bulge down => wider channel (baseline leaves a generous gap).
+    var bulge = minDim * (0.06 + (1 - b.gap / 100) * 0.40);
+    var steps = Math.max(1, Math.round(b.steps));
+    var band = bulge / (steps + 1);
+    // Shared wiggle noise per blob so color-step layers keep the same shape.
+    var noises = blobs.map(function () {
+      var arr = []; for (var i = 0; i <= segs; i++) arr.push(rng() * 2 - 1); return arr;
+    });
+
+    // Boundary points from p0 to p1, bulged toward the centre (away from the
+    // corner) by `useBulge`, wiggled by the blob's noise. Endpoints stay pinned.
+    function curvePts(blob, noise, useBulge) {
+      var P0 = blob.p0, P1 = blob.p1, C = blob.corner;
+      var dx = P1[0] - P0[0], dy = P1[1] - P0[1], len = Math.sqrt(dx * dx + dy * dy) || 1;
+      var px = -dy / len, py = dx / len;
+      // flip normal so it points away from the corner (into the canvas)
+      var mx = (P0[0] + P1[0]) / 2 - C[0], my = (P0[1] + P1[1]) / 2 - C[1];
+      if (px * mx + py * my < 0) { px = -px; py = -py; }
+      var pts = [];
+      for (var i = 0; i <= segs; i++) {
+        var t = i / segs, env = Math.sin(Math.PI * t);
+        var disp = env * (useBulge + noise[i] * amp);
+        var x = P0[0] + dx * t + px * disp, y = P0[1] + dy * t + py * disp;
+        if (x < 0) x = 0; else if (x > W) x = W;
+        if (y < 0) y = 0; else if (y > H) y = H;
+        pts.push([x, y]);
+      }
+      // Deck seam-matching: any endpoint that sits on a horizontal (top/bottom)
+      // edge gets a short vertical lead-in, so the boundary crosses the seam
+      // perpendicular. Combined with the shared contact x, adjacent slides then
+      // meet with matching tangents (no kink). Side-edge endpoints untouched.
+      if (b.vSeam) {
+        var HELP = Math.min(60, H * 0.06);
+        var last = pts.length - 1;
+        if (pts[0][1] < 1 || pts[0][1] > H - 1) {
+          pts.splice(1, 0, [pts[0][0], pts[0][1] + (pts[0][1] < 1 ? HELP : -HELP)]);
+          last = pts.length - 1;
+        }
+        if (pts[last][1] < 1 || pts[last][1] > H - 1) {
+          pts.splice(last, 0, [pts[last][0], pts[last][1] + (pts[last][1] < 1 ? HELP : -HELP)]);
+        }
+      }
+      return pts;
+    }
+    function pathFor(blob, noise, useBulge) {
+      var pts = curvePts(blob, noise, useBulge);
+      return "M" + f2(pts[0][0]) + "," + f2(pts[0][1]) + " " + smoothCurves(pts) +
+             "L" + f2(blob.corner[0]) + "," + f2(blob.corner[1]) + " Z";
+    }
+
+    // Largest blob first, then smaller lighter bands on top (toward the bg).
+    for (var k = 0; k < steps; k++) {
+      var ub = bulge - k * band;
+      var col = (steps === 1) ? b.color : mixHex(b.color, b.bg, k / steps);
+      for (var bi = 0; bi < blobs.length; bi++) {
+        parts.push('<path d="' + pathFor(blobs[bi], noises[bi], ub) + '" fill="' + col + '"/>');
+      }
+    }
+    return parts.join("");
+  }
+
+  /* ===================== Base styles: soft orbs / mesh ===================== */
+  var orbState = null, orbKey = "";
+  function buildOrbState(W, H) {
+    var o = state.orbs, key = o.count + "|" + o.seed + "|" + o.size + "|" + W + "x" + H;
+    if (orbState && orbKey === key) return orbState;
+    var rng = makeRng(o.seed), arr = [], minD = Math.min(W, H);
+    for (var i = 0; i < Math.max(1, Math.round(o.count)); i++) {
+      var ang = rng() * Math.PI * 2, sp = 0.3 + rng() * 0.8;
+      arr.push({ x: rng() * W, y: rng() * H, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+                 r: minD * (o.size / 100) * (0.6 + rng() * 0.7), ci: i });
+    }
+    orbState = arr; orbKey = key; return arr;
+  }
+  function buildOrbs(W, H) {
+    var o = state.orbs, arr = buildOrbState(W, H), cols = o.colors.length ? o.colors : ["#888"];
+    var soft = Math.max(0, Math.min(1, o.softness / 100)), mid = (0.12 + (1 - soft) * 0.62) * 100;
+    var defs = "", body = "";
+    for (var i = 0; i < arr.length; i++) {
+      var id = "sbsOrb" + i, c = cols[arr[i].ci % cols.length];
+      defs += '<radialGradient id="' + id + '">' +
+        '<stop offset="0%" stop-color="' + c + '" stop-opacity="0.9"/>' +
+        '<stop offset="' + mid.toFixed(0) + '%" stop-color="' + c + '" stop-opacity="0.42"/>' +
+        '<stop offset="100%" stop-color="' + c + '" stop-opacity="0"/></radialGradient>';
+      body += '<circle cx="' + arr[i].x.toFixed(1) + '" cy="' + arr[i].y.toFixed(1) +
+        '" r="' + arr[i].r.toFixed(1) + '" fill="url(#' + id + ')"/>';
+    }
+    return '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="' + state.blob.bg + '"/>' +
+      "<defs>" + defs + '</defs><g style="mix-blend-mode:' + o.blend + '">' + body + "</g>";
+  }
+
+  /* ===================== Base styles: dot / line grid ===================== */
+  function buildGrid(W, H) {
+    var g = state.grid, dots = state.style === "dots", sp = Math.max(6, g.spacing);
+    var pat = dots
+      ? '<pattern id="sbsGP" width="' + sp + '" height="' + sp + '" patternUnits="userSpaceOnUse">' +
+          '<circle cx="' + (sp / 2) + '" cy="' + (sp / 2) + '" r="' + g.dot + '" fill="' + g.color + '"/></pattern>'
+      : '<pattern id="sbsGP" width="' + sp + '" height="' + sp + '" patternUnits="userSpaceOnUse">' +
+          '<path d="M0 0 H' + sp + ' M0 0 V' + sp + '" stroke="' + g.color + '" stroke-width="' + g.thickness + '" fill="none"/></pattern>';
+    var fade = Math.max(0, Math.min(1, g.fade / 100)), maskAttr = "", maskDef = "";
+    if (fade > 0.01) {
+      maskDef = '<radialGradient id="sbsGF"><stop offset="' + ((1 - fade) * 100).toFixed(0) +
+        '%" stop-color="#fff" stop-opacity="1"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient>' +
+        '<mask id="sbsGM"><rect x="0" y="0" width="' + W + '" height="' + H + '" fill="url(#sbsGF)"/></mask>';
+      maskAttr = ' mask="url(#sbsGM)"';
+    }
+    var tintDef = '<radialGradient id="sbsGT"><stop offset="0%" stop-color="' + g.tint +
+      '" stop-opacity="0.6"/><stop offset="100%" stop-color="' + g.tint + '" stop-opacity="0"/></radialGradient>';
+    return '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="' + state.blob.bg + '"/>' +
+      "<defs>" + pat + tintDef + maskDef + "</defs>" +
+      '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="url(#sbsGT)"/>' +
+      '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="url(#sbsGP)"' + maskAttr + "/>";
+  }
+
+  // Base layer for the current style (into polySvg).
+  function buildBase(W, H) {
+    if (state.style === "orbs") return buildOrbs(W, H);
+    if (state.style === "dots" || state.style === "lines") return buildGrid(W, H);
+    if (state.light.motion === "static") { state.light.x = W / 2; state.light.y = H / 2; }
+    return shadePoly(W, H, state.light.x, state.light.y, false);
+  }
+
+  /* ===================== Render ===================== */
+  var polySvg = $("polySvg"), blobSvg = $("blobSvg"), canvasBox = $("canvasBox");
+
+  function applyComposite() {
+    var top = state.composite.top, blend = state.composite.blend, opacity = state.composite.opacity / 100;
+    polySvg.style.mixBlendMode = "normal"; blobSvg.style.mixBlendMode = "normal";
+    polySvg.style.opacity = "1"; blobSvg.style.opacity = "1";
+    var topEl = (top === "blob") ? blobSvg : polySvg, botEl = (top === "blob") ? polySvg : blobSvg;
+    botEl.style.zIndex = "1"; topEl.style.zIndex = "2";
+    if (state.composite.enabled) {
+      topEl.style.mixBlendMode = blend; topEl.style.opacity = String(opacity); topEl.style.display = "block";
+    } else {
+      // overlay off: hide the top layer entirely, show only the bottom one
+      topEl.style.display = "none";
+    }
+    botEl.style.display = "block";
+  }
+  function render() {
+    var W = VIEW_W, H = viewH();
+    canvasBox.style.aspectRatio = W + " / " + H;
+    polySvg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    blobSvg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    polySvg.innerHTML = buildBase(W, H);
+    blobSvg.innerHTML = state.blob.enabled ? buildBlobSvg(W, H) : "";
+    applyComposite();
+    if (state.style === "poly" && state.light.motion === "drift") startDrift();
+    if (state.style === "orbs" && state.orbs.drift) startOrbDrift();
+  }
+  var safeRender = guard(render, "render");
+
+  var rAF = window.requestAnimationFrame || function (f) { return setTimeout(f, 16); };
+
+  // Auto-drift: the light bounces around the canvas at the chosen speed.
+  // True while the Collate tab is showing: the Design preview is off-screen, so its
+  // rAF loops bail on their next frame instead of burning CPU behind a hidden view.
+  var collateActive = false;
+
+  var driftRAF = null;
+  function startDrift() {
+    if (driftRAF !== null) return;
+    function step() {
+      if (collateActive || !(state.style === "poly" && state.light.motion === "drift")) { driftRAF = null; return; }
+      var W = VIEW_W, H = viewH(), L = state.light, sp = L.speed * 0.12;
+      L.x += L.vx * sp; L.y += L.vy * sp;
+      if (L.x < 0) { L.x = 0; L.vx = Math.abs(L.vx); } else if (L.x > W) { L.x = W; L.vx = -Math.abs(L.vx); }
+      if (L.y < 0) { L.y = 0; L.vy = Math.abs(L.vy); } else if (L.y > H) { L.y = H; L.vy = -Math.abs(L.vy); }
+      safeRelight();
+      driftRAF = rAF(step);
+    }
+    driftRAF = rAF(step);
+  }
+
+  // Orb drift: soft orbs bounce slowly around the canvas.
+  var orbRAF = null;
+  function startOrbDrift() {
+    if (orbRAF !== null) return;
+    function step() {
+      if (collateActive || !(state.style === "orbs" && state.orbs.drift)) { orbRAF = null; return; }
+      var W = VIEW_W, H = viewH(), arr = buildOrbState(W, H), sp = state.orbs.speed * 0.04;
+      for (var i = 0; i < arr.length; i++) {
+        var o = arr[i]; o.x += o.vx * sp; o.y += o.vy * sp;
+        if (o.x < -o.r) { o.x = -o.r; o.vx = Math.abs(o.vx); } else if (o.x > W + o.r) { o.x = W + o.r; o.vx = -Math.abs(o.vx); }
+        if (o.y < -o.r) { o.y = -o.r; o.vy = Math.abs(o.vy); } else if (o.y > H + o.r) { o.y = H + o.r; o.vy = -Math.abs(o.vy); }
+      }
+      polySvg.innerHTML = buildOrbs(W, H);
+      orbRAF = rAF(step);
+    }
+    orbRAF = rAF(step);
+  }
+
+  // Re-light only (poly cursor move).
+  var relightPending = false;
+  function relight() {
+    var W = VIEW_W, H = viewH();
+    polySvg.innerHTML = shadePoly(W, H, state.light.x, state.light.y, false);
+  }
+  var safeRelight = guard(relight, "relight");
+
+  canvasBox.addEventListener("mousemove", guard(function (ev) {
+    if (state.style !== "poly" || state.light.motion !== "follow") return;
+    var rect = canvasBox.getBoundingClientRect();
+    var W = VIEW_W, H = viewH();
+    state.light.x = ((ev.clientX - rect.left) / rect.width) * W;
+    state.light.y = ((ev.clientY - rect.top) / rect.height) * H;
+    if (!relightPending) {
+      relightPending = true;
+      (window.requestAnimationFrame || function (f) { setTimeout(f, 16); })(function () {
+        relightPending = false; safeRelight();
+      });
+    }
+  }, "mousemove"));
+
+  /* ===================== Color list UI ===================== */
+  function renderColorList(containerId, arr, onChange) {
+    var box = $(containerId); box.innerHTML = "";
+    arr.forEach(function (hex, idx) {
+      var item = document.createElement("div"); item.className = "colorItem";
+      var ci = document.createElement("input"); ci.type = "color"; ci.value = hex;
+      var label = document.createElement("input"); label.type = "text"; label.className = "swatchHex";
+      label.value = hex; label.maxLength = 7; label.setAttribute("spellcheck", "false");
+      ci.addEventListener("input", guard(function () { arr[idx] = ci.value; label.value = ci.value; onChange(); }, "color.input"));
+      label.addEventListener("input", guard(function () {
+        var v = normalizeHex(label.value); if (v) { arr[idx] = v; ci.value = v; onChange(); }
+      }, "color.hex.edit"));
+      label.addEventListener("change", guard(function () {
+        var v = normalizeHex(label.value);
+        if (v) { arr[idx] = v; ci.value = v; label.value = v; onChange(); } else label.value = ci.value;
+      }, "color.hex.commit"));
+      var del = document.createElement("button"); del.className = "small"; del.textContent = "✕"; del.title = "Remove color";
+      del.addEventListener("click", guard(function () {
+        if (arr.length <= 1) { toast("Keep at least one color"); return; }
+        arr.splice(idx, 1); renderColorList(containerId, arr, onChange); onChange();
+      }, "color.remove"));
+      item.appendChild(ci); item.appendChild(label); item.appendChild(del); box.appendChild(item);
+    });
+  }
+
+  /* ===================== Wiring ===================== */
+  // Turn a read-only display span into a directly editable input (keeps id+class).
+  function upgradeToInput(el, type) {
+    if (!el || el.tagName === "INPUT") return el;
+    var inp = document.createElement("input");
+    inp.type = type; inp.id = el.id; inp.className = el.className;
+    inp.value = el.textContent.trim();
+    inp.setAttribute("spellcheck", "false");
+    el.parentNode.replaceChild(inp, el);
+    return inp;
+  }
+  function normalizeHex(s) {
+    if (s == null) return null;
+    s = String(s).trim().replace(/^#/, "");
+    if (/^[0-9a-fA-F]{3}$/.test(s)) s = s[0] + s[0] + s[1] + s[1] + s[2] + s[2];
+    return /^[0-9a-fA-F]{6}$/.test(s) ? "#" + s.toLowerCase() : null;
+  }
+  // Slider + editable number field (two-way). Typed values may be finer than
+  // the slider step, only clamped to [min,max], for granular control.
+  function bindSlider(id, valId, onInput) {
+    var el = $(id), out = upgradeToInput($(valId), "number");
+    if (out) { out.step = el.step; out.value = el.value; }
+    function clampNum(v) {
+      var mn = parseFloat(el.min), mx = parseFloat(el.max);
+      if (isNaN(v)) return null; return v < mn ? mn : v > mx ? mx : v;
+    }
+    el.addEventListener("input", guard(function () {
+      if (out) out.value = el.value; onInput(Number(el.value));
+    }, id));
+    if (out) {
+      out.addEventListener("input", guard(function () {
+        var v = clampNum(parseFloat(out.value)); if (v === null) return;
+        el.value = v; onInput(v);
+      }, valId + ".edit"));
+      out.addEventListener("change", guard(function () {
+        var v = clampNum(parseFloat(out.value));
+        if (v === null) { out.value = el.value; return; }
+        el.value = v; out.value = v; onInput(v);
+      }, valId + ".commit"));
+    }
+  }
+  // Color picker + editable hex field (two-way).
+  function bindColor(id, hexId, set) {
+    var el = $(id), hex = upgradeToInput($(hexId), "text");
+    if (hex) { hex.value = el.value; hex.setAttribute("maxlength", "7"); }
+    el.addEventListener("input", guard(function () {
+      if (hex) hex.value = el.value; set(el.value); safeRender();
+    }, id));
+    if (hex) {
+      hex.addEventListener("input", guard(function () {
+        var v = normalizeHex(hex.value); if (v) { el.value = v; set(v); safeRender(); }
+      }, hexId + ".edit"));
+      hex.addEventListener("change", guard(function () {
+        var v = normalizeHex(hex.value);
+        if (v) { el.value = v; hex.value = v; set(v); safeRender(); } else hex.value = el.value;
+      }, hexId + ".commit"));
+    }
+  }
+  function updatePolyModeUI() {
+    var hybrid = state.poly.mode === "hybrid";
+    $("polyBaseRow").classList.toggle("hidden", hybrid);
+    $("polyGradientWrap").classList.toggle("hidden", !hybrid);
+  }
+  // Show only the control groups relevant to the current base style.
+  function updateStyleUI() {
+    var s = state.style;
+    $("grpPoly").style.display = s === "poly" ? "" : "none";
+    $("grpLight").style.display = s === "poly" ? "" : "none";
+    $("grpOrbs").style.display = s === "orbs" ? "" : "none";
+    $("grpGrid").style.display = (s === "dots" || s === "lines") ? "" : "none";
+    $("gridThickRow").style.display = s === "lines" ? "flex" : "none";
+    $("gridDotRow").style.display = s === "dots" ? "flex" : "none";
+    $("orbSpeedRow").style.display = state.orbs.drift ? "flex" : "none";
+  }
+  // Curated dark palettes -> background + accent colours across styles.
+  function applyPalette(p) {
+    state.blob.bg = p.bg;
+    state.orbs.colors = p.colors.slice();
+    state.poly.colors = p.colors.slice();
+    state.grid.tint = p.colors[0];
+    state.grid.color = mixHex(p.colors[p.colors.length - 1], "#ffffff", 0.15);
+    orbState = null;
+    syncControlsFromState();
+    safeRender();
+  }
+  function renderPalettePills() {
+    var box = $("palettePills"); if (!box) return; box.innerHTML = "";
+    PALETTES.forEach(function (p) {
+      var pill = document.createElement("div");
+      pill.className = "pill"; pill.textContent = p.name; pill.title = "Apply " + p.name + " palette";
+      pill.style.borderLeft = "10px solid " + p.colors[1];
+      pill.addEventListener("click", guard(function () { applyPalette(p); }, "palette." + p.name));
+      box.appendChild(pill);
+    });
+  }
+
+  /* ===================== Saved presets ===================== */
+  // Click-to-load looks. Add more entries (B, C, …) here.
+  var PRESETS = {
+    A: {
+      "v": 1, "app": "slide-background-studio", "aspect": "16:9",
+      "poly": { "mode": "fss", "density": 160, "edge": 0, "base": "#0a032b", "colors": ["#34e0a1"], "seed": 1234 },
+      "light": { "motion": "drift", "speed": 6, "ambient": "#061b32", "diffuse": "#353d7e", "distance": 70, "intensity": 157, "vx": -0.82, "vy": 0.57 },
+      "blob": { "bg": "#001220", "color": "#545454", "orientation": "nwse", "fixedEnds": true, "top": 45, "right": 60, "bottom": 60, "left": 45, "complexity": 2, "contrast": 30, "gap": 50, "steps": 1, "seed": 9876 },
+      "composite": { "top": "blob", "blend": "overlay", "opacity": 40, "enabled": true }
+    }
+  };
+
+  /* ===================== Settings (JSON in/out) ===================== */
+  // A compact, reproducible snapshot of every control (incl. seeds + drift
+  // direction) so a saved look reproduces exactly.
+  function serializeSettings() {
+    var p = state.poly, l = state.light, b = state.blob, c = state.composite, o = state.orbs, g = state.grid;
+    return {
+      v: 1, app: "slide-background-studio", aspect: state.aspect, style: state.style,
+      poly: { mode: p.mode, density: p.density, edge: p.edge, base: p.base, colors: p.colors.slice(), seed: p.seed },
+      light: { motion: l.motion, speed: l.speed, ambient: l.ambient, diffuse: l.diffuse,
+               distance: l.distance, intensity: l.intensity, vx: l.vx, vy: l.vy },
+      orbs: { colors: o.colors.slice(), count: o.count, size: o.size, softness: o.softness,
+              blend: o.blend, drift: o.drift, speed: o.speed, seed: o.seed },
+      grid: { color: g.color, tint: g.tint, spacing: g.spacing, thickness: g.thickness, dot: g.dot, fade: g.fade },
+      blob: { bg: b.bg, color: b.color, orientation: b.orientation, fixedEnds: b.fixedEnds, enabled: b.enabled,
+              top: b.top, right: b.right, bottom: b.bottom, left: b.left,
+              complexity: b.complexity, contrast: b.contrast, gap: b.gap, steps: b.steps, seed: b.seed },
+      composite: { top: c.top, blend: c.blend, opacity: c.opacity, enabled: c.enabled }
+    };
+  }
+  function applySettings(s) {
+    if (!s || typeof s !== "object") { toast("Invalid settings"); return; }
+    if (s.aspect && ASPECTS[s.aspect]) state.aspect = s.aspect;
+    if (s.style) state.style = s.style;
+    function merge(dst, src, keys) {
+      if (!src) return;
+      keys.forEach(function (k) { if (src[k] !== undefined && src[k] !== null) dst[k] = src[k]; });
+    }
+    merge(state.poly, s.poly, ["mode", "density", "edge", "base", "seed"]);
+    if (s.poly && Array.isArray(s.poly.colors) && s.poly.colors.length) state.poly.colors = s.poly.colors.slice();
+    merge(state.light, s.light, ["motion", "speed", "ambient", "diffuse", "distance", "intensity", "vx", "vy"]);
+    merge(state.orbs, s.orbs, ["count", "size", "softness", "blend", "drift", "speed", "seed"]);
+    if (s.orbs && Array.isArray(s.orbs.colors) && s.orbs.colors.length) state.orbs.colors = s.orbs.colors.slice();
+    merge(state.grid, s.grid, ["color", "tint", "spacing", "thickness", "dot", "fade"]);
+    merge(state.blob, s.blob, ["bg", "color", "orientation", "fixedEnds", "enabled", "top", "right", "bottom", "left",
+                               "complexity", "contrast", "gap", "steps", "seed"]);
+    merge(state.composite, s.composite, ["top", "blend", "opacity", "enabled"]);
+    polyMesh = null; orbState = null;
+    syncControlsFromState();
+    safeRender();
+  }
+  // Push state back into every DOM control after a settings load.
+  function syncControlsFromState() {
+    function disp(el, v) { if (!el) return; if (el.tagName === "INPUT") el.value = v; else el.textContent = v; }
+    function sl(id, valId, v) { var e = $(id); if (e) e.value = v; disp($(valId), v); }
+    function col(id, hexId, v) { var e = $(id); if (e) e.value = v; disp($(hexId), v); }
+    function sel(id, v) { var e = $(id); if (e) e.value = v; }
+    function chk(id, v) { var e = $(id); if (e) e.checked = !!v; }
+    function pills(sel2, attr, v) {
+      document.querySelectorAll(sel2).forEach(function (pi) { pi.classList.toggle("active", pi.getAttribute(attr) === v); });
+    }
+    pills("#aspectPills .pill", "data-aspect", state.aspect);
+    sel("polyMode", state.poly.mode);
+    sl("polyDensity", "polyDensityVal", state.poly.density);
+    sl("polyEdge", "polyEdgeVal", state.poly.edge);
+    col("polyBase", "polyBaseHex", state.poly.base);
+    renderColorList("polyColors", state.poly.colors, safeRender);
+    sel("lightMotion", state.light.motion);
+    sl("lightSpeed", "lightSpeedVal", state.light.speed);
+    col("lightAmbient", "lightAmbientHex", state.light.ambient);
+    col("lightDiffuse", "lightDiffuseHex", state.light.diffuse);
+    sl("lightDistance", "lightDistanceVal", state.light.distance);
+    sl("lightIntensity", "lightIntensityVal", state.light.intensity);
+    $("lightSpeedRow").style.display = (state.light.motion === "drift") ? "flex" : "none";
+    pills("#blobOrient .pill", "data-orient", state.blob.orientation);
+    chk("blobFixedEnds", state.blob.fixedEnds);
+    sl("blobTop", "blobTopVal", state.blob.top);
+    sl("blobRight", "blobRightVal", state.blob.right);
+    sl("blobBottom", "blobBottomVal", state.blob.bottom);
+    sl("blobLeft", "blobLeftVal", state.blob.left);
+    col("blobColor", "blobColorHex", state.blob.color);
+    sl("blobSteps", "blobStepsVal", state.blob.steps);
+    sl("blobComplexity", "blobComplexityVal", state.blob.complexity);
+    sl("blobContrast", "blobContrastVal", state.blob.contrast);
+    sl("blobGap", "blobGapVal", state.blob.gap);
+    chk("blobEnabled", state.blob.enabled);
+    // background + new styles
+    sel("bgStyle", state.style);
+    col("bgColor", "bgColorHex", state.blob.bg);
+    renderColorList("orbColors", state.orbs.colors, function () { orbState = null; safeRender(); });
+    sl("orbCount", "orbCountVal", state.orbs.count);
+    sl("orbSize", "orbSizeVal", state.orbs.size);
+    sl("orbSoftness", "orbSoftnessVal", state.orbs.softness);
+    sel("orbBlend", state.orbs.blend);
+    chk("orbDrift", state.orbs.drift);
+    sl("orbSpeed", "orbSpeedVal", state.orbs.speed);
+    col("gridColor", "gridColorHex", state.grid.color);
+    col("gridTint", "gridTintHex", state.grid.tint);
+    sl("gridSpacing", "gridSpacingVal", state.grid.spacing);
+    sl("gridThickness", "gridThicknessVal", state.grid.thickness);
+    sl("gridDot", "gridDotVal", state.grid.dot);
+    sl("gridFade", "gridFadeVal", state.grid.fade);
+    chk("compEnabled", state.composite.enabled);
+    sel("topLayer", state.composite.top);
+    sel("blendMode", state.composite.blend);
+    sl("topOpacity", "topOpacityVal", state.composite.opacity);
+    updatePolyModeUI();
+    updateStyleUI();
+  }
+
+  function initControls() {
+    // Aspect pills
+    var pills = document.querySelectorAll("#aspectPills .pill");
+    pills.forEach(function (pill) {
+      pill.addEventListener("click", guard(function () {
+        pills.forEach(function (p) { p.classList.remove("active"); });
+        pill.classList.add("active");
+        state.aspect = pill.getAttribute("data-aspect");
+        polyMesh = null; safeRender();
+      }, "aspect.click"));
+    });
+
+    // Background: base style + shared bg + palettes
+    $("bgStyle").addEventListener("change", guard(function () {
+      state.style = $("bgStyle").value; updateStyleUI(); safeRender();
+    }, "bgStyle"));
+    bindColor("bgColor", "bgColorHex", function (v) { state.blob.bg = v; });
+    renderPalettePills();
+
+    // Soft orbs / mesh
+    renderColorList("orbColors", state.orbs.colors, function () { orbState = null; safeRender(); });
+    $("orbAddColor").addEventListener("click", guard(function () {
+      state.orbs.colors.push("#5a6172");
+      renderColorList("orbColors", state.orbs.colors, function () { orbState = null; safeRender(); });
+      orbState = null; safeRender();
+    }, "orb.addColor"));
+    bindSlider("orbCount", "orbCountVal", function (v) { state.orbs.count = v; orbState = null; safeRender(); });
+    bindSlider("orbSize", "orbSizeVal", function (v) { state.orbs.size = v; orbState = null; safeRender(); });
+    bindSlider("orbSoftness", "orbSoftnessVal", function (v) { state.orbs.softness = v; safeRender(); });
+    var orbBlendSel = $("orbBlend");
+    BLEND_MODES.forEach(function (m) { var o = document.createElement("option"); o.value = m; o.textContent = m; orbBlendSel.appendChild(o); });
+    orbBlendSel.value = state.orbs.blend;
+    orbBlendSel.addEventListener("change", guard(function () { state.orbs.blend = orbBlendSel.value; safeRender(); }, "orb.blend"));
+    $("orbDrift").addEventListener("change", guard(function () {
+      state.orbs.drift = $("orbDrift").checked;
+      $("orbSpeedRow").style.display = state.orbs.drift ? "flex" : "none"; safeRender();
+    }, "orb.drift"));
+    bindSlider("orbSpeed", "orbSpeedVal", function (v) { state.orbs.speed = v; });
+    $("orbShuffle").addEventListener("click", guard(function () {
+      state.orbs.seed = (Math.random() * 1e9) >>> 0; orbState = null; safeRender();
+    }, "orb.shuffle"));
+
+    // Grid
+    bindColor("gridColor", "gridColorHex", function (v) { state.grid.color = v; });
+    bindColor("gridTint", "gridTintHex", function (v) { state.grid.tint = v; });
+    bindSlider("gridSpacing", "gridSpacingVal", function (v) { state.grid.spacing = v; safeRender(); });
+    bindSlider("gridThickness", "gridThicknessVal", function (v) { state.grid.thickness = v; safeRender(); });
+    bindSlider("gridDot", "gridDotVal", function (v) { state.grid.dot = v; safeRender(); });
+    bindSlider("gridFade", "gridFadeVal", function (v) { state.grid.fade = v; safeRender(); });
+
+    // Poly
+    $("polyMode").addEventListener("change", guard(function () {
+      state.poly.mode = $("polyMode").value; updatePolyModeUI(); safeRender();
+    }, "poly.mode"));
+    bindSlider("polyDensity", "polyDensityVal", function (v) { state.poly.density = v; polyMesh = null; safeRender(); });
+    bindSlider("polyEdge", "polyEdgeVal", function (v) { state.poly.edge = v; safeRender(); });
+    bindColor("polyBase", "polyBaseHex", function (v) { state.poly.base = v; });
+    $("polyAddColor").addEventListener("click", guard(function () {
+      state.poly.colors.push("#ffffff"); renderColorList("polyColors", state.poly.colors, safeRender); safeRender();
+    }, "poly.addColor"));
+    $("polyShuffle").addEventListener("click", guard(function () {
+      state.poly.seed = (Math.random() * 1e9) >>> 0; polyMesh = null; safeRender();
+    }, "poly.shuffle"));
+
+    // FSS light
+    $("lightMotion").addEventListener("change", guard(function () {
+      state.light.motion = $("lightMotion").value;
+      $("lightSpeedRow").style.display = (state.light.motion === "drift") ? "flex" : "none";
+      safeRender(); // starts the drift loop when needed
+    }, "light.motion"));
+    bindSlider("lightSpeed", "lightSpeedVal", function (v) { state.light.speed = v; });
+    bindColor("lightAmbient", "lightAmbientHex", function (v) { state.light.ambient = v; });
+    bindColor("lightDiffuse", "lightDiffuseHex", function (v) { state.light.diffuse = v; });
+    bindSlider("lightDistance", "lightDistanceVal", function (v) { state.light.distance = v; safeRender(); });
+    bindSlider("lightIntensity", "lightIntensityVal", function (v) { state.light.intensity = v; safeRender(); });
+
+    // Blob
+    var orientPills = document.querySelectorAll("#blobOrient .pill");
+    orientPills.forEach(function (pill) {
+      pill.addEventListener("click", guard(function () {
+        orientPills.forEach(function (p) { p.classList.remove("active"); });
+        pill.classList.add("active");
+        state.blob.orientation = pill.getAttribute("data-orient"); safeRender();
+      }, "blob.orient"));
+    });
+    $("blobFixedEnds").addEventListener("change", guard(function () {
+      state.blob.fixedEnds = $("blobFixedEnds").checked; safeRender();
+    }, "blob.fixedEnds"));
+    bindSlider("blobTop", "blobTopVal", function (v) { state.blob.top = v; safeRender(); });
+    bindSlider("blobRight", "blobRightVal", function (v) { state.blob.right = v; safeRender(); });
+    bindSlider("blobBottom", "blobBottomVal", function (v) { state.blob.bottom = v; safeRender(); });
+    bindSlider("blobLeft", "blobLeftVal", function (v) { state.blob.left = v; safeRender(); });
+    bindColor("blobColor", "blobColorHex", function (v) { state.blob.color = v; });
+    $("blobEnabled").addEventListener("change", guard(function () {
+      state.blob.enabled = $("blobEnabled").checked; safeRender();
+    }, "blob.enabled"));
+    bindSlider("blobSteps", "blobStepsVal", function (v) { state.blob.steps = v; safeRender(); });
+    bindSlider("blobComplexity", "blobComplexityVal", function (v) { state.blob.complexity = v; safeRender(); });
+    bindSlider("blobContrast", "blobContrastVal", function (v) { state.blob.contrast = v; safeRender(); });
+    bindSlider("blobGap", "blobGapVal", function (v) { state.blob.gap = v; safeRender(); });
+    $("blobShuffle").addEventListener("click", guard(function () {
+      state.blob.seed = (Math.random() * 1e9) >>> 0; safeRender();
+    }, "blob.shuffle"));
+
+    // Composite
+    $("compEnabled").addEventListener("change", guard(function () {
+      state.composite.enabled = $("compEnabled").checked; safeRender();
+    }, "composite.enabled"));
+    $("topLayer").addEventListener("change", guard(function () { state.composite.top = $("topLayer").value; safeRender(); }, "composite.top"));
+    var blendSel = $("blendMode");
+    BLEND_MODES.forEach(function (m) { var o = document.createElement("option"); o.value = m; o.textContent = m; blendSel.appendChild(o); });
+    blendSel.value = state.composite.blend;
+    blendSel.addEventListener("change", guard(function () { state.composite.blend = blendSel.value; safeRender(); }, "composite.blend"));
+    bindSlider("topOpacity", "topOpacityVal", function (v) { state.composite.opacity = v; safeRender(); });
+
+    // Export + diagnostics
+    $("copyHtmlBtn").addEventListener("click", guard(copyExport, "export.copy"));
+    $("copySettingsBtn").addEventListener("click", guard(function () {
+      copyText(JSON.stringify(serializeSettings(), null, 2), "Settings copied as JSON");
+    }, "settings.copy"));
+    $("loadSettingsBtn").addEventListener("click", guard(function () {
+      var txt = window.prompt("Paste a settings JSON to apply:");
+      if (txt == null || !txt.trim()) return;
+      var parsed;
+      try { parsed = JSON.parse(txt); }
+      catch (e) { toast("Invalid JSON"); logErr("settings.parse", e); return; }
+      applySettings(parsed); toast("Settings applied");
+    }, "settings.load"));
+    var presetBox = $("presetButtons");
+    Object.keys(PRESETS).forEach(function (key) {
+      var btn = document.createElement("button"); btn.className = "small"; btn.textContent = "[" + key + "]";
+      btn.title = "Load preset " + key;
+      btn.addEventListener("click", guard(function () {
+        applySettings(PRESETS[key]); toast("Loaded preset " + key);
+      }, "preset." + key));
+      presetBox.appendChild(btn);
+    });
+    $("throwTestBtn").addEventListener("click", guard(function () {
+      throw new Error("Deliberate test error from the Throw test error button.");
+    }, "throwTest"));
+    $("gotoCollateBtn").addEventListener("click", guard(function () { setTab("collate"); }, "goto.collate"));
+    $("deckSnippetBtn").addEventListener("click", guard(function () {
+      copyText(buildDeck("snippet"), "Deck background snippet copied");
+    }, "deck.snippet"));
+    $("copyErrBtn").addEventListener("click", guard(function () {
+      if (!errors.length) { toast("No errors logged"); return; }
+      copyText(errors.join("\n"), "Error log copied");
+    }, "copyErr"));
+    $("clearErrBtn").addEventListener("click", guard(function () {
+      errors = []; errContent.innerHTML = ""; errBox.classList.remove("show");
+    }, "clearErr"));
+
+    renderColorList("polyColors", state.poly.colors, safeRender);
+    $("lightSpeedRow").style.display = (state.light.motion === "drift") ? "flex" : "none";
+    updatePolyModeUI();
+    updateStyleUI();
+  }
+
+
+  /* =====================================================================
+     Collate — image ingestion, slide ordering, and the deck it bakes.
+     collate.items is the single source of truth for the deck: one entry per
+     slide, in slide order. A blank slide is a real, movable entry, not an
+     implicit edge case. Originals are retained as File handles (disk-backed,
+     ~0 heap) so changing bake quality can re-encode from pristine source.
+     ===================================================================== */
+  var collate = {
+    items: [],           // ordered slide list; deck N = items.length
+    nextId: 1,
+    userOrdered: false,  // true once the user reorders/inserts/removes anything
+    quality: "high",     // orig | high | med
+    selectedId: null,
+    procGen: 0           // bumped to abandon a superseded re-encode chain
+  };
+
+  var QUALITY = { orig: null, high: { edge: 2560, q: 0.82 }, med: { edge: 1600, q: 0.72 } };
+  var MAX_FILE_BYTES = 25 * 1024 * 1024;
+  var WARN_FILE_BYTES = 8 * 1024 * 1024;
+  var OK_TYPE = { "image/jpeg": 1, "image/png": 1, "image/webp": 1, "image/gif": 1 };
+  var OK_EXT = { jpg: 1, jpeg: 1, png: 1, webp: 1, gif: 1 };
+
+  function newBlank() { return { kind: "blank", id: collate.nextId++ }; }
+
+  function fmtBytes(n) {
+    if (!n) return "0 B";
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return Math.round(n / 1024) + " KB";
+    var mb = n / (1024 * 1024);
+    return (mb >= 100 ? Math.round(mb) : Math.round(mb * 10) / 10) + " MB";
+  }
+
+  function escAttr(s) {
+    return String(s === null || s === undefined ? "" : s)
+      .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function extOf(name) {
+    var m = /\.([A-Za-z0-9]+)$/.exec(String(name || ""));
+    return m ? m[1].toLowerCase() : "";
+  }
+  function baseName(name) {
+    var s = String(name || ""), i = s.lastIndexOf(".");
+    return i > 0 ? s.slice(0, i) : s;
+  }
+
+  // 1 < 2 < 3 < 3a < 4 < 10, case-insensitively, with a stable total order:
+  // numeric-aware compare, then raw code units, then insertion id.
+  function naturalCompare(a, b) {
+    var r = String(a.sortKey).localeCompare(String(b.sortKey), undefined, { numeric: true, sensitivity: "base" });
+    if (r !== 0) return r;
+    if (a.sortKey < b.sortKey) return -1;
+    if (a.sortKey > b.sortKey) return 1;
+    return a.id - b.id;
+  }
+
+  // Busy state is derived, never counted: an abandoned chain (rapid quality
+  // switching) would leak a running counter and disable the download forever.
+  function pendingCount() {
+    var n = 0, i;
+    for (i = 0; i < collate.items.length; i++) if (collate.items[i].pending) n++;
+    return n;
+  }
+
+  function imageItems() {
+    return collate.items.filter(function (it) { return it.kind === "image"; });
+  }
+
+  // Canonical layout: one leading blank, images by filename, one trailing blank.
+  function applyDefaultOrder() {
+    var imgs = imageItems();
+    imgs.sort(naturalCompare);
+    collate.items = [newBlank()].concat(imgs, [newBlank()]);
+  }
+
+  function markUserOrdered() { collate.userOrdered = true; }
+
+  function refreshAll() { renderStrip(); refreshDeckReadouts(); updateMemMeter(); }
+
+  /* ---------- upload error list ---------- */
+  function addUploadErr(msg) {
+    var box = $("uploadErrs");
+    var row = document.createElement("div");
+    row.className = "uploadErr"; row.textContent = msg;
+    box.appendChild(row); box.classList.add("show");
+    $("uploadErrsClear").hidden = false;
+  }
+  function clearUploadErrs() {
+    $("uploadErrs").innerHTML = ""; $("uploadErrs").classList.remove("show");
+    $("uploadErrsClear").hidden = true;
+  }
+
+  /* ---------- per-file processing (shared by add and re-encode) ---------- */
+  // Decodes one file and fills the item's payload. Sequential by construction:
+  // exactly one decoded bitmap is alive at a time, so a batch of phone photos
+  // cannot spike memory. gen guards against a superseded chain.
+  function processFile(item, gen, done) {
+    var file = item.file;
+    if (gen !== collate.procGen) { done(); return; }
+
+    // GIFs pass through untouched at every quality — a canvas round-trip would
+    // flatten the animation to its first frame.
+    var isGif = file.type === "image/gif" || extOf(item.name) === "gif";
+    var spec = QUALITY[collate.quality];
+
+    function fail(msg) {
+      addUploadErr(item.name + " — " + msg);
+      done(false);
+    }
+
+    function readWhole(cb) {
+      var fr = new FileReader();
+      fr.onload = function () { cb(String(fr.result)); };
+      fr.onerror = function () { fail("could not be read — the original may have moved or been deleted"); };
+      fr.readAsDataURL(file);
+    }
+
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onerror = function () {
+      URL.revokeObjectURL(url);
+      fail(extOf(item.name) === "heic" || extOf(item.name) === "heif"
+        ? "HEIC not supported — export as JPEG from Photos first"
+        : "could not be decoded as an image");
+    };
+    img.onload = function () {
+      // The browser applies EXIF orientation itself, so these dimensions are
+      // already the upright ones (Chrome 81+ / Firefox 77+ / Safari 13.1+).
+      var nw = img.naturalWidth || img.width, nh = img.naturalHeight || img.height;
+      if (!nw || !nh) { URL.revokeObjectURL(url); fail("has no usable image data"); return; }
+
+      var thumb = drawScaled(img, nw, nh, 192, "image/jpeg", 0.7);
+
+      function finish(payload, w, ht, type) {
+        URL.revokeObjectURL(url);
+        if (gen !== collate.procGen) { done(); return; }
+        item.dataURL = payload; item.bytes = payload.length;
+        item.w = w; item.h = ht; item.type = type;
+        item.thumbURL = thumb || payload;
+        item.pending = false;
+        done(true);
+      }
+
+      if (isGif || !spec) {
+        readWhole(function (data) { finish(data, nw, nh, file.type || "image/jpeg"); });
+        return;
+      }
+
+      var scale = Math.min(1, spec.edge / Math.max(nw, nh));
+      var tw = Math.max(1, Math.round(nw * scale)), th = Math.max(1, Math.round(nh * scale));
+      var jpeg = drawScaled(img, nw, nh, Math.max(tw, th), "image/jpeg", spec.q);
+      var best = jpeg, bestType = "image/jpeg";
+
+      // PNG/WebP sources may carry transparency, which JPEG flattens to black.
+      // Keep whichever encoding is actually smaller.
+      if (file.type === "image/png" || file.type === "image/webp") {
+        var png = drawScaled(img, nw, nh, Math.max(tw, th), "image/png", 1);
+        if (png && (!best || png.length < best.length)) { best = png; bestType = "image/png"; }
+      }
+      if (!best) { readWhole(function (data) { finish(data, nw, nh, file.type || "image/jpeg"); }); return; }
+
+      // Re-encoding an already-optimized file can make it bigger; if we did not
+      // actually downscale, keep the original bytes when they are smaller.
+      if (scale === 1) {
+        var chosen = best, chosenType = bestType;
+        readWhole(function (data) {
+          if (data && data.length < chosen.length) finish(data, nw, nh, file.type || chosenType);
+          else finish(chosen, tw, th, chosenType);
+        });
+        return;
+      }
+      finish(best, tw, th, bestType);
+    };
+    img.src = url;
+  }
+
+  // Draw an already-decoded image to a canvas whose longest edge is maxEdge.
+  // Never upscales, and never draws at native size first (Safari caps ~16.7MP).
+  function drawScaled(img, nw, nh, maxEdge, type, q) {
+    try {
+      var scale = Math.min(1, maxEdge / Math.max(nw, nh));
+      var w = Math.max(1, Math.round(nw * scale)), h = Math.max(1, Math.round(nh * scale));
+      var c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      var ctx = c.getContext("2d");
+      if (!ctx) return null;
+      ctx.drawImage(img, 0, 0, w, h);
+      return c.toDataURL(type, q);
+    } catch (e) { logErr("collate.canvas", e); return null; }
+  }
+
+  /* ---------- adding files ---------- */
+  function addFiles(fileList) {
+    var files = [], skipped = 0, i, f;
+    for (i = 0; i < fileList.length; i++) {
+      f = fileList[i];
+      var ext = extOf(f.name);
+      if (ext === "svg" || f.type === "image/svg+xml") {
+        addUploadErr(f.name + " — SVG isn't supported in baked decks"); skipped++; continue;
+      }
+      if (ext === "heic" || ext === "heif") {
+        addUploadErr(f.name + " — HEIC not supported — export as JPEG from Photos first"); skipped++; continue;
+      }
+      if (!OK_TYPE[f.type] && !OK_EXT[ext]) {
+        addUploadErr(f.name + " — not a supported image (JPG, PNG, WebP, GIF)"); skipped++; continue;
+      }
+      if (f.size > MAX_FILE_BYTES) {
+        addUploadErr(f.name + " — larger than 25 MB, skipped"); skipped++; continue;
+      }
+      if (f.size > WARN_FILE_BYTES) toast(f.name + " is " + fmtBytes(f.size) + " — consider Medium quality");
+      files.push(f);
+    }
+    if (!files.length) {
+      if (skipped) toast("No supported images in that drop");
+      return;
+    }
+
+    // Placeholders go in synchronously at their final positions, so async decode
+    // completion order can never scramble the strip.
+    var batch = files.map(function (file) {
+      return { kind: "image", id: collate.nextId++, name: file.name, sortKey: baseName(file.name),
+               type: file.type || "", file: file, origBytes: file.size,
+               dataURL: "", bytes: 0, w: 0, h: 0, thumbURL: "", alt: prettyAlt(file.name), pending: true };
+    });
+    batch.sort(naturalCompare);
+
+    if (!collate.userOrdered) {
+      var all = imageItems().concat(batch);
+      all.sort(naturalCompare);
+      collate.items = [newBlank()].concat(all, [newBlank()]);
+    } else {
+      // After manual ordering, a new batch appends as a block before the trailing
+      // blank; nothing already placed is ever re-sorted.
+      var at = collate.items.length;
+      if (at > 0 && collate.items[at - 1].kind === "blank") at -= 1;
+      collate.items = collate.items.slice(0, at).concat(batch, collate.items.slice(at));
+    }
+    if (collate.selectedId === null) collate.selectedId = collate.items[0].id;
+
+    refreshAll();
+
+    var gen = collate.procGen, idx = 0, added = 0;
+    function next() {
+      if (gen !== collate.procGen) return;
+      if (idx >= batch.length) {
+        toast(skipped ? ("Added " + added + " image" + (added === 1 ? "" : "s") + " — " + skipped +
+                         " file" + (skipped === 1 ? "" : "s") + " skipped (see Add images)")
+                      : ("Added " + added + " image" + (added === 1 ? "" : "s")));
+        refreshAll();
+        return;
+      }
+      var item = batch[idx++];
+      processFile(item, gen, function (ok) {
+        if (ok) added++;
+        else removeItemById(item.id, true);
+        refreshAll();
+        next();
+      });
+    }
+    next();
+  }
+
+  function prettyAlt(name) {
+    return baseName(name).replace(/[-_]+/g, " ").trim();
+  }
+
+  /* ---------- re-encoding on a quality change ---------- */
+  function reprocessAll() {
+    var imgs = imageItems().filter(function (it) {
+      return it.file && !(it.type === "image/gif" || extOf(it.name) === "gif");
+    });
+    if (!imgs.length) return;
+
+    collate.procGen++;
+    var gen = collate.procGen, idx = 0;
+    var label = collate.quality === "med" ? "Medium" : (collate.quality === "orig" ? "Original" : "High");
+    toast("Re-encoding " + imgs.length + " image" + (imgs.length === 1 ? "" : "s") + " at " + label + "…");
+    imgs.forEach(function (it) { it.pending = true; });
+    refreshAll();
+
+    function next() {
+      if (gen !== collate.procGen) return;
+      if (idx >= imgs.length) {
+        toast("Re-encoded " + imgs.length + " image" + (imgs.length === 1 ? "" : "s") +
+              " — deck now " + deckSizeLabel());
+        refreshAll();
+        return;
+      }
+      var item = imgs[idx++];
+      processFile(item, gen, function (ok) {
+        if (gen !== collate.procGen) return;
+        // A failed re-read keeps the payload the item already has.
+        item.pending = false;
+        refreshAll();
+        next();
+      });
+    }
+    next();
+  }
+
+
+  /* ---------- ordering strip ---------- */
+  function indexOfId(id) {
+    for (var i = 0; i < collate.items.length; i++) if (collate.items[i].id === id) return i;
+    return -1;
+  }
+
+  function renderStrip() {
+    var strip = $("slideStrip");
+    if (!strip) return;
+    var items = collate.items, html = [], i;
+    var bg = collateBgThumbURL();
+    var bgCss = bg ? (' style="background-image:url(' + bg + ')"') : "";
+    var onlyBlanks = items.length === 2 && items[0].kind === "blank" && items[1].kind === "blank";
+
+    for (i = 0; i < items.length; i++) {
+      var it = items[i];
+      html.push('<button class="insertGap" data-gap="' + i + '" title="Insert a blank slide here" aria-label="Insert blank slide"><span class="gapMark"></span></button>');
+      if (onlyBlanks && i === 1) {
+        html.push('<div id="stripEmpty"><b>Your images land here</b><span>Drop files anywhere on this strip, or use Add images →</span></div>');
+      }
+      var cls = "slideCard" + (it.id === collate.selectedId ? " selected" : "") +
+                (it.kind === "blank" ? " blank" : "") + (it.pending ? " loading" : "");
+      html.push('<div class="' + cls + '" data-id="' + it.id + '" tabindex="0" role="listitem">');
+      html.push('<div class="cardThumb"' + bgCss + '>');
+      html.push('<span class="cardIdx">' + (i + 1) + "</span>");
+      if (it.kind === "blank") html.push('<span class="blankTag">Blank</span>');
+      else if (it.thumbURL) html.push('<img class="thumbImg" src="' + it.thumbURL + '" alt="">');
+      html.push('<button class="cardBtn cardRemove" data-act="remove" title="Remove slide" aria-label="Remove slide">×</button>');
+      html.push('<button class="cardBtn cardLeft" data-act="left" title="Move left" aria-label="Move left">‹</button>');
+      html.push('<button class="cardBtn cardRight" data-act="right" title="Move right" aria-label="Move right">›</button>');
+      html.push("</div>");
+      html.push('<span class="cardName" title="' + escAttr(it.kind === "blank" ? "blank" : it.name) + '">' +
+        escAttr(it.kind === "blank" ? "blank" : it.name) + "</span>");
+      html.push('<span class="cardSize">' + (it.kind === "blank" ? "" : (it.pending ? "…" : fmtBytes(it.bytes))) + "</span>");
+      html.push("</div>");
+    }
+    html.push('<button class="insertGap" data-gap="' + items.length + '" title="Insert a blank slide here" aria-label="Insert blank slide"><span class="gapMark"></span></button>');
+    strip.innerHTML = html.join("");
+    renderSelection();
+  }
+
+  function renderSelection() {
+    var it = selectedItem(), items = collate.items;
+    var idx = collate.selectedId === null ? -1 : indexOfId(collate.selectedId);
+    var overlay = $("colSlideOverlay");
+    if (overlay) {
+      if (it && it.kind === "image" && (it.dataURL || it.thumbURL)) {
+        // The full payload is sharper, but very large ones stay as the thumbnail
+        // so the preview never holds a second multi-MB decode.
+        var src = (it.bytes && it.bytes < 1500000 && it.dataURL) ? it.dataURL : (it.thumbURL || it.dataURL);
+        overlay.innerHTML = '<img class="colOverlayImg" src="' + src + '" alt="">';
+      } else overlay.innerHTML = "";
+    }
+    var label = $("colPreviewLabel");
+    if (label) {
+      label.textContent = idx < 0 ? (items.length + " slides")
+        : ("Slide " + (idx + 1) + " of " + items.length + " — " +
+           (it.kind === "blank" ? "blank" : it.name));
+    }
+    renderSelectedGroup();
+  }
+
+  function selectedItem() {
+    var i = collate.selectedId === null ? -1 : indexOfId(collate.selectedId);
+    return i < 0 ? null : collate.items[i];
+  }
+
+  function selectSlide(id) {
+    collate.selectedId = id;
+    var cards = $("slideStrip").querySelectorAll(".slideCard"), i;
+    for (i = 0; i < cards.length; i++) {
+      if (Number(cards[i].getAttribute("data-id")) === id) cards[i].classList.add("selected");
+      else cards[i].classList.remove("selected");
+    }
+    renderSelection();
+  }
+
+  function renderSelectedGroup() {
+    var it = selectedItem();
+    var altRow = $("selAltRow"), val = $("selFileVal"), hint = $("selHint"), rm = $("selRemoveBtn");
+    if (!val) return;
+    if (!it) {
+      val.textContent = "—"; altRow.classList.add("hidden"); rm.disabled = true;
+      hint.textContent = "Click a card in the strip to preview it here and edit its details.";
+      return;
+    }
+    rm.disabled = false;
+    if (it.kind === "blank") {
+      val.textContent = "Blank slide"; altRow.classList.add("hidden");
+      hint.textContent = "A blank slide shows the background on its own.";
+      return;
+    }
+    val.textContent = it.name + (it.bytes ? (" · " + fmtBytes(it.bytes)) : "");
+    altRow.classList.remove("hidden");
+    $("altInput").value = it.alt || "";
+    hint.textContent = "Written into the deck as the image's alt text — screen readers and search engines " +
+      "read it. A short description beats a filename.";
+  }
+
+  function moveSlide(id, delta) {
+    var i = indexOfId(id), j = i + delta;
+    if (i < 0 || j < 0 || j >= collate.items.length) return;
+    var tmp = collate.items[i];
+    collate.items[i] = collate.items[j];
+    collate.items[j] = tmp;
+    markUserOrdered();
+    refreshAll();
+    focusCard(id);
+  }
+
+  function removeItemById(id, quiet) {
+    var i = indexOfId(id);
+    if (i < 0) return;
+    var it = collate.items[i];
+    collate.items.splice(i, 1);
+    if (collate.selectedId === id) {
+      var nx = collate.items[Math.min(i, collate.items.length - 1)];
+      collate.selectedId = nx ? nx.id : null;
+    }
+    if (!quiet) {
+      markUserOrdered();
+      toast("Removed " + (it.kind === "blank" ? "blank slide" : it.name));
+    }
+  }
+
+  function removeSlide(id) { removeItemById(id, false); refreshAll(); }
+
+  function insertBlankAt(index) {
+    index = Math.max(0, Math.min(index, collate.items.length));
+    collate.items.splice(index, 0, newBlank());
+    markUserOrdered();
+    toast("Blank slide inserted");
+    refreshAll();
+  }
+
+  function addBlankEnd() { insertBlankAt(collate.items.length); }
+
+  function resetOrder() {
+    applyDefaultOrder();
+    if (collate.selectedId !== null && indexOfId(collate.selectedId) < 0) {
+      collate.selectedId = collate.items.length ? collate.items[0].id : null;
+    }
+    toast("Order reset — blank, images by filename, blank");
+    refreshAll();
+  }
+
+  function focusCard(id) {
+    var card = $("slideStrip").querySelector('.slideCard[data-id="' + id + '"]');
+    if (card) card.focus();
+  }
+
+
+  /* ---------- background preview snapshot ----------
+     The Collate preview is a rasterized still, not a second live SVG: cloning
+     the Design markup would duplicate gradient/filter ids, and url(#id) resolves
+     document-wide, so one of the two copies would paint wrong. It is rebuilt
+     only when the settings that feed it actually change. */
+  var colBgHash = null, colThumbURL = "";
+
+  function compositeDecision() {
+    var c = state.composite;
+    return { topIsBlob: c.top === "blob", blend: c.blend, opacity: c.opacity / 100, enabled: c.enabled };
+  }
+
+  function settingsHash() {
+    return JSON.stringify([state.poly, state.light.ambient, state.light.diffuse, state.light.distance,
+      state.light.intensity, state.blob, state.composite, state.style]);
+  }
+
+  function svgDataURI(inner, w, hh) {
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + hh +
+      '" viewBox="0 0 ' + w + " " + hh + '">' + inner + "</svg>";
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  }
+
+  function syncCollatePreview(force) {
+    var hash = settingsHash();
+    if (!force && hash === colBgHash) return;
+    colBgHash = hash;
+
+    var W = 1280, H = 720;   // deck aspect, always 16:9 regardless of state.aspect
+    // shadePoly directly, never buildBase: buildBase branches on state.style, and
+    // the deck always bakes the poly world. The light is pinned to the centre
+    // because state.light.x/y live in Design-aspect coordinates.
+    // Note: buildMesh caches one W x H mesh, so this evicts the Design mesh
+    // whenever the Design aspect is not 16:9 — a cheap rebuild on tab switch.
+    var polyInner = shadePoly(W, H, W / 2, H / 2, false);
+    var blobInner = state.blob.enabled ? buildBlobSvg(W, H) : "";
+
+    var base = $("colBgBase"), top = $("colBgTop");
+    var d = compositeDecision();
+    var polyURI = svgDataURI(polyInner, W, H);
+    var blobURI = blobInner ? svgDataURI(blobInner, W, H) : "";
+
+    var topEl = d.topIsBlob ? top : base, botEl = d.topIsBlob ? base : top;
+    topEl.src = d.topIsBlob ? (blobURI || "") : polyURI;
+    botEl.src = d.topIsBlob ? polyURI : (blobURI || "");
+    botEl.style.zIndex = "1"; topEl.style.zIndex = "2";
+    topEl.style.mixBlendMode = "normal"; botEl.style.mixBlendMode = "normal";
+    topEl.style.opacity = "1"; botEl.style.opacity = "1";
+    botEl.style.display = botEl.src ? "block" : "none";
+    if (d.enabled && topEl.src) {
+      topEl.style.display = "block";
+      topEl.style.mixBlendMode = d.blend;
+      topEl.style.opacity = String(d.opacity);
+    } else topEl.style.display = "none";
+
+    var note = $("colAspectNote");
+    if (note) note.classList[state.aspect === "16:9" ? "remove" : "add"]("show");
+
+    rasterizeThumb(polyURI, blobURI, d);
+  }
+
+  // One small raster of the composed background, reused as the CSS background of
+  // every card thumbnail, so the strip costs one decode rather than one per card.
+  function rasterizeThumb(polyURI, blobURI, d) {
+    try {
+      var c = document.createElement("canvas");
+      c.width = 264; c.height = 148;
+      var ctx = c.getContext("2d");
+      if (!ctx) return;
+      var pending = 2, botURI = d.topIsBlob ? polyURI : blobURI, topURI = d.topIsBlob ? blobURI : polyURI;
+      var botImg = new Image(), topImg = new Image();
+      function draw() {
+        if (--pending > 0) return;
+        try {
+          if (botImg.src) ctx.drawImage(botImg, 0, 0, c.width, c.height);
+          if (d.enabled && topImg.src) {
+            // Non-separable blend modes have no faithful canvas equivalent;
+            // plain source-over is the rule for this 264px thumbnail.
+            var op = CANVAS_BLEND[d.blend] || "source-over";
+            ctx.globalCompositeOperation = op;
+            ctx.globalAlpha = d.opacity;
+            ctx.drawImage(topImg, 0, 0, c.width, c.height);
+            ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+          }
+          colThumbURL = c.toDataURL("image/jpeg", 0.72);
+          renderStrip();
+        } catch (e) { logErr("collate.thumb", e); }
+      }
+      botImg.onload = draw; botImg.onerror = draw;
+      topImg.onload = draw; topImg.onerror = draw;
+      if (botURI) botImg.src = botURI; else draw();
+      if (topURI) topImg.src = topURI; else draw();
+    } catch (e) { logErr("collate.raster", e); }
+  }
+
+  var CANVAS_BLEND = {
+    normal: "source-over", multiply: "multiply", screen: "screen", overlay: "overlay",
+    darken: "darken", lighten: "lighten", "color-dodge": "color-dodge", "color-burn": "color-burn",
+    "hard-light": "hard-light", "soft-light": "soft-light", difference: "difference",
+    exclusion: "exclusion", hue: "hue", saturation: "saturation", color: "color", luminosity: "luminosity"
+  };
+
+  function collateBgThumbURL() { return colThumbURL; }
+
+  /* ---------- deck readouts ---------- */
+  function deckEstimateBytes() {
+    var n = 1200000, items = collate.items, i;
+    for (i = 0; i < items.length; i++) if (items[i].dataURL) n += items[i].dataURL.length;
+    return n;
+  }
+  function deckSizeLabel() { return "≈ " + fmtBytes(deckEstimateBytes()); }
+
+  function refreshDeckReadouts() {
+    var items = collate.items, imgs = 0, blanks = 0, i;
+    for (i = 0; i < items.length; i++) {
+      if (items[i].kind === "image") imgs++; else blanks++;
+    }
+    var cnt = $("deckCountVal");
+    if (cnt) cnt.textContent = items.length + " (" + imgs + " image" + (imgs === 1 ? "" : "s") +
+      ", " + blanks + " blank)";
+
+    var busy = pendingCount() > 0;
+    var size = $("deckSizeVal");
+    if (size) size.textContent = busy ? "—" : deckSizeLabel();
+
+    var btn = $("collateDownloadBtn");
+    if (btn) {
+      btn.disabled = busy;
+      btn.textContent = busy ? "Processing images…" : "Download deck (.html)";
+    }
+
+    var warn = $("deckWarn");
+    if (warn) {
+      var mb = deckEstimateBytes() / (1024 * 1024);
+      warn.className = "";
+      if (!imgs) {
+        warn.className = "show info";
+        warn.textContent = "No images yet — you'll get a deck of blank slides over the background.";
+      } else if (mb > 40) {
+        warn.className = "show danger";
+        warn.textContent = "This deck will be ≈ " + Math.round(mb) + " MB — some browsers and mail clients " +
+          "will choke. Strongly consider 'Medium' quality or fewer images.";
+      } else if (mb > 15) {
+        warn.className = "show warn";
+        warn.textContent = "Heads up — this deck will be ≈ " + Math.round(mb) + " MB. It'll work, but big " +
+          "files are slow to open and share. Try 'Medium' quality.";
+      }
+    }
+
+    var sh = $("deckStyleHint");
+    if (sh) sh.style.display = (state.style === "poly") ? "none" : "block";
+
+    var chip = $("colErrChip");
+    if (chip) chip.classList[errors.length ? "add" : "remove"]("show");
+  }
+
+  /* ---------- memory meter ---------- */
+  var memLast = "";
+  function updateMemMeter() {
+    var el = $("memMeter"), txt = $("memText");
+    if (!el || !txt) return;
+    var items = collate.items, chars = 0, i;
+    for (i = 0; i < items.length; i++) {
+      if (items[i].dataURL) chars += items[i].dataURL.length;
+      if (items[i].thumbURL) chars += items[i].thumbURL.length;
+    }
+    var payload = chars * 2;   // JS strings are UTF-16: two bytes per character
+    var parts = ["Images " + fmtBytes(payload)];
+    var tier = "";
+
+    var pm = null;
+    try { pm = window.performance && performance.memory ? performance.memory : null; } catch (e) { pm = null; }
+    if (pm && pm.jsHeapSizeLimit) {
+      var usedMB = Math.round(pm.usedJSHeapSize / 1048576), limMB = Math.round(pm.jsHeapSizeLimit / 1048576);
+      parts.push("Heap " + usedMB + " / " + limMB + " MB");
+      var frac = pm.usedJSHeapSize / pm.jsHeapSizeLimit;
+      if (frac > 0.8) tier = "danger"; else if (frac > 0.6) tier = "warn";
+    } else if (navigator.deviceMemory) {
+      parts.push("Device " + navigator.deviceMemory + " GB");
+    }
+    var payMB = payload / 1048576;
+    if (payMB > 300) tier = "danger";
+    else if (payMB > 120 && tier !== "danger") tier = "warn";
+
+    var s = parts.join(" · ") + (tier === "danger" ? " — try Medium quality" : "");
+    if (s !== memLast) { memLast = s; txt.textContent = s; }
+    el.className = tier;
+  }
+
+
+  /* ---------- tabs ---------- */
+  function setTab(name) {
+    var collateOn = name === "collate";
+    collateActive = collateOn;
+    $("viewDesign").classList[collateOn ? "add" : "remove"]("hidden");
+    $("viewCollate").classList[collateOn ? "remove" : "add"]("hidden");
+    $("tabDesignBtn").classList[collateOn ? "remove" : "add"]("active");
+    $("tabCollateBtn").classList[collateOn ? "add" : "remove"]("active");
+    $("tabDesignBtn").setAttribute("aria-selected", collateOn ? "false" : "true");
+    $("tabCollateBtn").setAttribute("aria-selected", collateOn ? "true" : "false");
+    if (collateOn) { syncCollatePreview(false); refreshAll(); }
+    else safeRender();   // restarts whichever drift loops the current state wants
+  }
+
+  /* ---------- collate wiring ---------- */
+  function initCollate() {
+    collate.items = [newBlank(), newBlank()];
+    collate.selectedId = collate.items[0].id;
+
+    $("tabDesignBtn").addEventListener("click", guard(function () { setTab("design"); }, "tab.design"));
+    $("tabCollateBtn").addEventListener("click", guard(function () { setTab("collate"); }, "tab.collate"));
+
+    var input = $("fileInput");
+    $("filePickBtn").addEventListener("click", guard(function () { input.click(); }, "file.pick"));
+    $("dropZone").addEventListener("click", guard(function () { input.click(); }, "dz.click"));
+    input.addEventListener("change", guard(function () {
+      if (input.files && input.files.length) addFiles(input.files);
+      input.value = "";   // so re-picking the same file still fires change
+    }, "file.change"));
+
+    // A missed drop would navigate the tab to the image and destroy every
+    // unsaved slide, so the document refuses file drops everywhere by default.
+    document.addEventListener("dragover", function (e) { e.preventDefault(); }, false);
+    document.addEventListener("drop", function (e) { e.preventDefault(); }, false);
+
+    var dz = $("dropZone"), strip = $("slideStrip");
+    [dz, strip].forEach(function (el) {
+      var depth = 0;
+      el.addEventListener("dragenter", function (e) {
+        if (!hasFiles(e)) return;
+        depth++; el.classList.add("dragOver");
+      });
+      el.addEventListener("dragleave", function () {
+        depth = Math.max(0, depth - 1);
+        if (!depth) el.classList.remove("dragOver");
+      });
+      el.addEventListener("dragover", function (e) { if (hasFiles(e)) e.preventDefault(); });
+      el.addEventListener("drop", guard(function (e) {
+        e.preventDefault(); depth = 0; el.classList.remove("dragOver");
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+      }, "collate.drop"));
+    });
+    document.addEventListener("dragenter", function (e) {
+      if (hasFiles(e)) dz.classList.add("dragHint");
+    });
+    document.addEventListener("dragleave", function (e) {
+      if (!e.relatedTarget) dz.classList.remove("dragHint");
+    });
+    document.addEventListener("drop", function () { dz.classList.remove("dragHint"); });
+
+    $("qualityPills").addEventListener("click", guard(function (e) {
+      var btn = e.target.closest ? e.target.closest("[data-q]") : null;
+      if (!btn) return;
+      var q = btn.getAttribute("data-q");
+      if (q === collate.quality) return;
+      collate.quality = q;
+      var pills = $("qualityPills").querySelectorAll("[data-q]"), i;
+      for (i = 0; i < pills.length; i++) pills[i].classList.toggle("active", pills[i] === btn);
+      reprocessAll();
+    }, "collate.quality"));
+
+    $("uploadErrsClear").addEventListener("click", guard(clearUploadErrs, "collate.errClear"));
+    $("addBlankEndBtn").addEventListener("click", guard(addBlankEnd, "collate.addBlank"));
+    $("resetOrderBtn").addEventListener("click", guard(resetOrder, "collate.reset"));
+    $("collateDownloadBtn").addEventListener("click", guard(downloadDeck, "collate.download"));
+
+    $("selRemoveBtn").addEventListener("click", guard(function () {
+      if (collate.selectedId !== null) removeSlide(collate.selectedId);
+    }, "collate.selRemove"));
+    $("altInput").addEventListener("input", guard(function () {
+      var it = selectedItem();
+      if (it && it.kind === "image") it.alt = $("altInput").value;
+    }, "collate.alt"));
+
+    // One delegated listener for the whole strip: cards are re-rendered often.
+    strip.addEventListener("click", guard(function (e) {
+      var gap = e.target.closest("[data-gap]");
+      if (gap) { insertBlankAt(Number(gap.getAttribute("data-gap"))); return; }
+      var card = e.target.closest(".slideCard");
+      if (!card) return;
+      var id = Number(card.getAttribute("data-id"));
+      var act = e.target.closest("[data-act]");
+      if (act) {
+        var a = act.getAttribute("data-act");
+        if (a === "remove") removeSlide(id);
+        else if (a === "left") moveSlide(id, -1);
+        else if (a === "right") moveSlide(id, 1);
+        return;
+      }
+      selectSlide(id);
+    }, "collate.stripClick"));
+
+    strip.addEventListener("keydown", guard(function (e) {
+      var card = e.target.closest ? e.target.closest(".slideCard") : null;
+      if (!card) return;
+      var id = Number(card.getAttribute("data-id")), i = indexOfId(id), k = e.key;
+      if (k === "ArrowLeft" || k === "ArrowRight") {
+        e.preventDefault();
+        var d = k === "ArrowLeft" ? -1 : 1;
+        if (e.ctrlKey || e.metaKey) moveSlide(id, d);
+        else {
+          var nx = collate.items[i + d];
+          if (nx) { selectSlide(nx.id); focusCard(nx.id); }
+        }
+      } else if (k === "Delete" || k === "Backspace") {
+        e.preventDefault(); removeSlide(id);
+      } else if (k === "Enter" || k === " ") {
+        e.preventDefault(); selectSlide(id);
+      }
+    }, "collate.stripKeys"));
+
+    // Vertical wheel scrolls the strip horizontally.
+    strip.addEventListener("wheel", function (e) {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      if (strip.scrollWidth <= strip.clientWidth) return;
+      e.preventDefault(); strip.scrollLeft += e.deltaY;
+    }, { passive: false });
+
+    window.addEventListener("beforeunload", function (ev) {
+      var hasImages = collate.items.some(function (it) { return it.kind === "image"; });
+      if (!hasImages) return;
+      ev.preventDefault(); ev.returnValue = "";
+    });
+
+    setInterval(guard(updateMemMeter, "collate.mem"), 2000);
+    refreshAll();
+  }
+
+  function hasFiles(e) {
+    var dt = e.dataTransfer;
+    if (!dt) return false;
+    if (dt.types) {
+      for (var i = 0; i < dt.types.length; i++) if (dt.types[i] === "Files") return true;
+      return false;
+    }
+    return true;
+  }
+
+  /* ===================== Export ===================== */
+  function buildExport() {
+    var W = VIEW_W, H = viewH();
+    var top = state.composite.top, blend = state.composite.blend, opacity = state.composite.opacity / 100, L = state.light;
+    var style = state.style;
+
+    // Base layer = the chosen style. Only poly bakes a re-light data array.
+    var polyBaked = (style === "poly") ? shadePoly(W, H, W / 2, H / 2, true) : null;
+    var baseInner = style === "orbs" ? buildOrbs(W, H)
+      : (style === "dots" || style === "lines") ? buildGrid(W, H)
+      : polyBaked.inner;
+    var blobInner = state.blob.enabled ? buildBlobSvg(W, H) : "";
+
+    var enabled = state.composite.enabled;
+    var polyZ = (top === "poly") ? 2 : 1, blobZ = (top === "blob") ? 2 : 1;
+    var polyTop = (top === "poly"), blobTop = (top === "blob");
+    var polyBlend = polyTop ? blend : "normal", blobBlend = blobTop ? blend : "normal";
+    var polyOp = polyTop ? opacity : 1, blobOp = blobTop ? opacity : 1;
+    var polyHide = polyTop && !enabled, blobHide = blobTop && !enabled;
+    var polyId = "sbsBase_" + Math.floor(Math.random() * 1e9).toString(36);
+
+    function svgTag(id, inner, z, bmode, op, hide) {
+      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" ' +
+        'preserveAspectRatio="none"' + (id ? ' id="' + id + '"' : "") +
+        ' style="position:absolute;inset:0;width:100%;height:100%;display:' + (hide ? "none" : "block") + ';' +
+        'z-index:' + z + ';mix-blend-mode:' + bmode + ';opacity:' + op + ';">' + inner + '</svg>';
+    }
+
+    var html = '<div style="position:relative;width:100%;height:100%;overflow:hidden;">';
+    html += svgTag(polyId, baseInner, polyZ, polyBlend, polyOp, polyHide);
+    html += svgTag(null, blobInner, blobZ, blobBlend, blobOp, blobHide);
+
+    if (style === "orbs" && state.orbs.drift) {
+      // Inline orb-drift: bounce each circle around, matching the studio.
+      var arr = buildOrbState(W, H), O = arr.map(function (o) {
+        return [Math.round(o.x), Math.round(o.y), +o.vx.toFixed(3), +o.vy.toFixed(3), Math.round(o.r)];
+      });
+      html += "<scr" + "ipt>(function(){var svg=document.getElementById('" + polyId + "');if(!svg)return;" +
+        "var C=svg.getElementsByTagName('circle'),O=" + JSON.stringify(O) + ",W=" + W + ",H=" + H + ",SPD=" + (state.orbs.speed * 0.04) + ";" +
+        "function tick(){for(var i=0;i<O.length;i++){var o=O[i],r=o[4];o[0]+=o[2]*SPD;o[1]+=o[3]*SPD;" +
+        "if(o[0]<-r){o[0]=-r;o[2]=Math.abs(o[2]);}else if(o[0]>W+r){o[0]=W+r;o[2]=-Math.abs(o[2]);}" +
+        "if(o[1]<-r){o[1]=-r;o[3]=Math.abs(o[3]);}else if(o[1]>H+r){o[1]=H+r;o[3]=-Math.abs(o[3]);}" +
+        "var c=C[i];if(c){c.setAttribute('cx',o[0]);c.setAttribute('cy',o[1]);}}" +
+        "if(!document.hidden)requestAnimationFrame(tick);}requestAnimationFrame(tick);})();<\/scr" + "ipt>";
+    } else if (style === "poly" && (L.motion === "follow" || L.motion === "drift")) {
+      // Inline re-lighting script: recomputes triangle fills as the light moves.
+      // "follow" tracks the cursor; "drift" bounces the light around on its own.
+      var amb = hexToRgb(L.ambient), dif = hexToRgb(L.diffuse), pb = hexToRgb(state.poly.base);
+      var driver;
+      if (L.motion === "follow") {
+        driver = 'svg.parentNode.addEventListener("mousemove",function(e){' +
+          'var r=svg.getBoundingClientRect();shadeAt((e.clientX-r.left)/r.width*W,(e.clientY-r.top)/r.height*H);});';
+      } else {
+        driver = 'var X=' + f2(L.x) + ',Y=' + f2(L.y) + ',VX=' + L.vx + ',VY=' + L.vy + ',SPD=' + (L.speed * 0.12) + ';' +
+          'function tick(){X+=VX*SPD;Y+=VY*SPD;' +
+          'if(X<0){X=0;VX=Math.abs(VX);}else if(X>W){X=W;VX=-Math.abs(VX);}' +
+          'if(Y<0){Y=0;VY=Math.abs(VY);}else if(Y>H){Y=H;VY=-Math.abs(VY);}' +
+          'shadeAt(X,Y);requestAnimationFrame(tick);}requestAnimationFrame(tick);';
+      }
+      var script =
+        '<script>(function(){' +
+          'var svg=document.getElementById("' + polyId + '");if(!svg)return;' +
+          'var P=svg.getElementsByTagName("path");' +
+          'var D=' + JSON.stringify(polyBaked.data) + ';' +
+          'var MODE="' + state.poly.mode + '";' +
+          'var W=' + W + ',H=' + H + ',LZ=' + L.distance + ',INT=' + (L.intensity / 100) + ',EDGE=' + state.poly.edge + ';' +
+          'var AMB=[' + amb.r + ',' + amb.g + ',' + amb.b + '],DIF=[' + dif.r + ',' + dif.g + ',' + dif.b + '],BASE=[' + pb.r + ',' + pb.g + ',' + pb.b + '];' +
+          'function cl(v){return v<0?0:v>1?1:v;}' +
+          'function hx(v){v=Math.round(cl(v)*255).toString(16);return v.length<2?"0"+v:v;}' +
+          'function shadeAt(lx,ly){' +
+            'var i,d,cx,cy,dx,dy,dist,ill,aAr,aAg,aAb,aDr,aDg,aDb,col,p;' +
+            'for(i=0;i<D.length;i++){d=D[i];cx=d[0];cy=d[1];' +
+              'dx=lx-cx;dy=ly-cy;dist=Math.sqrt(dx*dx+dy*dy+LZ*LZ)||1;ill=LZ/dist;' +
+              'if(MODE==="hybrid"){aAr=d[2]/255;aAg=d[3]/255;aAb=d[4]/255;aDr=aAr;aDg=aAg;aDb=aAb;}' +
+              'else{aAr=BASE[0]/255;aAg=BASE[1]/255;aAb=BASE[2]/255;aDr=1;aDg=1;aDb=1;}' +
+              'col="#"+hx(aAr*AMB[0]/255+aDr*DIF[0]/255*ill*INT)+hx(aAg*AMB[1]/255+aDg*DIF[1]/255*ill*INT)+hx(aAb*AMB[2]/255+aDb*DIF[2]/255*ill*INT);' +
+              'p=P[i];if(p){p.setAttribute("fill",col);if(EDGE<=0)p.setAttribute("stroke",col);}' +
+            '}' +
+          '}' +
+          driver +
+        '})();<\/scr' + 'ipt>';
+      html += script;
+    }
+    html += '</div>';
+    return html;
+  }
+  function copyExport() { copyText(buildExport(), "Slide HTML copied to clipboard"); }
+
+  /* =====================================================================
+     Slide-deck generator — bakes the current look into a deck of N slides,
+     where N is the Collate tab's slide count.
+     Blob layer: the SAME corner-blob engine (buildBlobSvg), rendered once per
+     slide and stacked vertically, alternating NW->SE / NE->SW. The only thing
+     shared across a seam is one contact fraction (slide k's top contact =
+     slide k-1's bottom contact), so the channel flows across the join; the
+     diagonal direction and side come from the alternating orientation. Each
+     slice gets its own seed + contacts for random, editable texture.
+     Mesh + lights span one continuous 1920 x (N*1080) world; lights are summed with
+     a smooth Gaussian window in world-y so there is no brightness line at seams.
+     ===================================================================== */
+  // Per-slide constants. The slide count N and world height WH are computed per
+  // build from collate.items.length and threaded through as parameters.
+  var DK = { W: 1920, SH: 1080, SIGMA: 1404 };
+
+  function deckN() { return Math.max(1, collate.items.length); }
+
+  function deckBlobLayer(N) {
+    var W = DK.W, SH = DK.SH, b = state.blob, baseNW = b.orientation === "nwse";
+    var rng = makeRng((b.seed >>> 0) ^ 0x9e3779b9);
+    function cl(v, a, c) { return v < a ? a : v > c ? c : v; }
+    function slideNW(k) { return (k % 2 === 0) === baseNW; }  // slide 0 = user's orientation, then alternate
+    // Shared seam contact fractions (percent). s[k] is slide k's top contact
+    // AND slide k-1's bottom contact -> the channel mouth lines up at the seam.
+    var s = [];
+    for (var j = 0; j <= N; j++) s.push(cl(0.5 + (rng() * 2 - 1) * 0.20, 0.22, 0.78) * 100);
+    var parts = [];
+    for (var k = 0; k < N; k++) {
+      var ov = {
+        orientation: slideNW(k) ? "nwse" : "nesw",
+        top: s[k], bottom: s[k + 1],
+        seed: (b.seed + k * 1013) >>> 0,   // per-slice bulge variation (texture)
+        vSeam: true,                       // vertical lead-in at seams -> matching angle
+        noBg: true
+      };
+      parts.push('<g transform="translate(0 ' + (k * SH) + ')">' + buildBlobSvg(W, SH, ov) + "</g>");
+    }
+    return parts.join("");
+  }
+
+  // Triangulate the full 1920 x WH world once; return centroid data + path markup.
+  function deckMesh(N, WH) {
+    var W = DK.W, rng = makeRng(state.poly.seed), p = state.poly;
+    // Point budget scales per slide (identical to the old fixed formula when N is 10),
+    // with an absolute ceiling so a 50-slide deck does not explode generation time.
+    var count = Math.max(300, Math.min(Math.min(350 * N, 8000), Math.round(p.density * 1.2 * N)));
+    var pts = [];
+    for (var i = 0; i < count; i++) pts.push([rng() * W, rng() * WH]);
+    pts.push([0, 0], [W, 0], [W, WH], [0, WH]);
+    var topN = 10; for (var e = 1; e < topN; e++) { pts.push([e / topN * W, 0]); pts.push([e / topN * W, WH]); }
+    var sideN = Math.round(WH / 160); for (var s = 1; s < sideN; s++) { pts.push([0, s / sideN * WH]); pts.push([W, s / sideN * WH]); }
+    var er = Math.max(8, Math.round(count / 20));
+    for (var q = 0; q < er; q++) { pts.push([rng() * W, 0]); pts.push([rng() * W, WH]); pts.push([0, rng() * WH]); pts.push([W, rng() * WH]); }
+    var tris = triangulate(pts), hybrid = p.mode === "hybrid", D = [], paths = [];
+    var amb = hexToUnit(state.light.ambient), base = hexToUnit(p.base), edge = p.edge;
+    for (var z = 0; z < tris.length; z += 3) {
+      var a = pts[tris[z]], bb = pts[tris[z + 1]], cc = pts[tris[z + 2]];
+      var cx = (a[0] + bb[0] + cc[0]) / 3, cy = (a[1] + bb[1] + cc[1]) / 3, surf = null, entry;
+      if (hybrid) { surf = hexToUnit(sampleGradient(p.colors, (cx / W) * 0.6 + (cy / WH) * 0.4)); entry = [Math.round(cx), Math.round(cy), Math.round(surf[0] * 255), Math.round(surf[1] * 255), Math.round(surf[2] * 255)]; }
+      else entry = [Math.round(cx), Math.round(cy)];
+      D.push(entry);
+      // ambient-only initial fill (first rAF frame lights it within ~16ms)
+      var aA = hybrid ? surf : base;
+      var fill = rgbHex(aA[0] * amb[0], aA[1] * amb[1], aA[2] * amb[2]);
+      var stroke = edge > 0 ? "#0a0d14" : fill, sw = edge > 0 ? edge : 1.5;
+      paths.push('<path d="M' + a[0].toFixed(1) + "," + a[1].toFixed(1) + "L" + bb[0].toFixed(1) + "," + bb[1].toFixed(1) +
+        "L" + cc[0].toFixed(1) + "," + cc[1].toFixed(1) + 'Z" fill="' + fill + '" stroke="' + stroke +
+        '" stroke-width="' + sw + '" stroke-linejoin="round"/>');
+    }
+    return { D: D, inner: paths.join("") };
+  }
+
+  // Runtime (string) shared by both outputs. Sums all lights with a Gaussian
+  // window in world-y + Reinhard soft-clamp; re-shades only the visible band.
+  var DECK_RUNTIME =
+    "function sbsStart(C){var N=C.N,VW=C.VIEW_W,SH=C.SLIDE_H,SIG=C.SIGMA,LZ=C.LZ,INT=C.INT,MODE=C.MODE,EDGE=C.EDGE,AMB=C.AMB,DIF=C.DIF,BASE=C.BASE,D=C.D;" +
+    "var D0=DIF[0]/255,D1=DIF[1]/255,D2=DIF[2]/255,A0=AMB[0]/255,A1=AMB[1]/255,A2=AMB[2]/255,B0=BASE[0]/255,B1=BASE[1]/255,B2=BASE[2]/255;" +
+    "var svg=document.getElementById('sbsSvg'),gW=document.getElementById('sbsWorld'),poly=document.querySelectorAll('#sbsPoly path');" +
+    "var order=D.map(function(_,i){return i;}).sort(function(a,b){return D[a][1]-D[b][1];}),oys=order.map(function(i){return D[i][1];});" +
+    "var lights=[];for(var k=0;k<N;k++){lights.push({x:VW/2,y:(k+0.5)*SH,vx:Math.cos(k*2.39996)*0.7,vy:Math.sin(k*2.39996)*0.5,lo:k*SH-150,hi:(k+1)*SH+150,sp:C.SPEED*0.12*(1+0.07*Math.sin(k))});}" +
+    "function step(){for(var k=0;k<N;k++){var L=lights[k];L.x+=L.vx*L.sp;L.y+=L.vy*L.sp;if(L.x<0){L.x=-L.x;L.vx=-L.vx;}else if(L.x>VW){L.x=2*VW-L.x;L.vx=-L.vx;}if(L.y<L.lo){L.y=2*L.lo-L.y;L.vy=-L.vy;}else if(L.y>L.hi){L.y=2*L.hi-L.y;L.vy=-L.vy;}}}" +
+    "function hx(v){v=Math.round((v<0?0:v>1?1:v)*255).toString(16);return v.length<2?'0'+v:v;}" +
+    "function shade(d){var cx=d[0],cy=d[1],sr=0,sg=0,sb=0;for(var k=0;k<N;k++){var ck=(k+0.5)*SH,e=(cy-ck)/SIG,w=Math.exp(-0.5*e*e);if(w<0.02)continue;var L=lights[k],dx=L.x-cx,dy=L.y-cy,ill=LZ/Math.sqrt(dx*dx+dy*dy+LZ*LZ),c=w*ill;sr+=D0*c;sg+=D1*c;sb+=D2*c;}" +
+    "var fr=sr/(1+sr),fg=sg/(1+sg),fb=sb/(1+sb),aAr,aAg,aAb,aDr,aDg,aDb;if(MODE==='hybrid'){aAr=d[2]/255;aAg=d[3]/255;aAb=d[4]/255;aDr=aAr;aDg=aAg;aDb=aAb;}else{aAr=B0;aAg=B1;aAb=B2;aDr=1;aDg=1;aDb=1;}" +
+    "return '#'+hx(aAr*A0+aDr*fr*INT)+hx(aAg*A1+aDg*fg*INT)+hx(aAb*A2+aDb*fb*INT);}" +
+    "function lb(t){var lo=0,hi=oys.length;while(lo<hi){var mid=(lo+hi)>>1;if(oys[mid]<t)lo=mid+1;else hi=mid;}return lo;}" +
+    "var visH=SH;function layout(){var sc=(window.innerWidth/VW)||1;visH=window.innerHeight/sc;svg.setAttribute('viewBox','0 0 '+VW+' '+visH);}" +
+    "function frame(){step();var top=C.scrollTop(),vp=C.viewportH()||1,wy=top/vp*SH;gW.setAttribute('transform','translate(0 '+(-wy)+')');var a=lb(wy-SH),bI=lb(wy+visH+SH);for(var j=a;j<bI;j++){var idx=order[j],col=shade(D[idx]);poly[idx].setAttribute('fill',col);if(EDGE<=0)poly[idx].setAttribute('stroke',col);}if(!document.hidden)requestAnimationFrame(frame);}" +
+    "layout();window.addEventListener('resize',function(){layout();if(C.onResize)C.onResize();});document.addEventListener('visibilitychange',function(){if(!document.hidden)requestAnimationFrame(frame);});requestAnimationFrame(frame);if(C.controller)C.controller();}";
+
+  // Standalone-only navigation controller (one gesture = one slide, snapped).
+  var DECK_CONTROLLER_A = "var deck=document.getElementById('sbsDeck'),N=";
+  var DECK_CONTROLLER_B =
+    ",cur=0,locked=false,lastWheel=0,tmr=null;" +
+    "function cl(v,a,b){return v<a?a:v>b?b:v;}" +
+    "function settle(){clearTimeout(tmr);deck.scrollTop=cur*deck.clientHeight;locked=false;}" +
+    "function goTo(i){i=cl(i,0,N-1);if(i===cur&&!locked)return;cur=i;locked=true;deck.scrollTo({top:i*deck.clientHeight,behavior:'smooth'});clearTimeout(tmr);tmr=setTimeout(settle,650);}" +
+    "deck.addEventListener('scrollend',settle);" +
+    "deck.addEventListener('wheel',function(e){e.preventDefault();var t=(window.performance&&performance.now())||Date.now();if(locked||t-lastWheel<120)return;if(Math.abs(e.deltaY)<4)return;lastWheel=t;goTo(cur+(e.deltaY>0?1:-1));},{passive:false});" +
+    "window.addEventListener('keydown',function(e){var k=e.key;if(k==='ArrowDown'||k==='PageDown'||k===' '){e.preventDefault();goTo(cur+1);}else if(k==='ArrowUp'||k==='PageUp'){e.preventDefault();goTo(cur-1);}else if(k==='Home'){e.preventDefault();goTo(0);}else if(k==='End'){e.preventDefault();goTo(N-1);}});" +
+    "var ty=null;deck.addEventListener('touchstart',function(e){ty=e.touches[0].clientY;},{passive:true});deck.addEventListener('touchend',function(e){if(ty==null||locked){ty=null;return;}var dy=ty-e.changedTouches[0].clientY;if(Math.abs(dy)>40)goTo(cur+(dy>0?1:-1));ty=null;});" +
+    "window.addEventListener('resize',function(){clearTimeout(tmr);tmr=setTimeout(function(){deck.scrollTop=cur*deck.clientHeight;},140);});window.__sbsCur=function(){return cur;};window.__sbsGoTo=goTo;";
+
+  var DECK_CSS =
+    "html,body{margin:0;height:100%;background:#001220}" +
+    "#sbsBg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}" +
+    "#sbsSvg{width:100%;height:100%;display:block}" +
+    "#sbsDeck{position:relative;z-index:1;height:100vh;overflow-y:scroll;scroll-snap-type:none;scrollbar-width:none;-ms-overflow-style:none}" +
+    "#sbsDeck::-webkit-scrollbar{display:none}" +
+    ".slide{height:100vh;width:100%;position:relative;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;padding:0 9vw;color:#f4f7fb;scroll-snap-align:start}" +
+    ".scrim{max-width:62ch;padding:clamp(20px,4vh,48px);border-radius:16px;background:radial-gradient(120% 120% at 0% 0%,rgba(2,10,20,.55),rgba(2,10,20,.18) 60%,transparent);backdrop-filter:blur(2px);text-shadow:0 1px 18px rgba(0,0,0,.45)}" +
+    ".display{font:800 clamp(40px,7vw,104px)/1.02 system-ui,sans-serif;margin:0}" +
+    ".lede{font:400 clamp(18px,2.4vw,30px)/1.4 system-ui;opacity:.92;margin:.6em 0 0}" +
+    "h2{font:700 clamp(28px,4vw,56px)/1.1 system-ui;margin:0 0 .5em}" +
+    ".eyebrow{font:600 13px/1 system-ui;letter-spacing:.2em;text-transform:uppercase;opacity:.7}" +
+    ".cols{display:grid;grid-template-columns:1fr 1fr;gap:clamp(16px,3vw,40px);font:400 clamp(15px,1.5vw,20px)/1.6 system-ui}" +
+    ".bullets{line-height:1.8;padding-left:1.1em;font:400 clamp(16px,1.7vw,22px)/1.8 system-ui}" +
+    ".quote blockquote{font:600 clamp(26px,4.4vw,60px)/1.18 Georgia,serif;margin:0}" +
+    ".quote cite{display:block;margin-top:1em;font-style:normal;opacity:.7}" +
+    ".deckfoot{position:absolute;left:9vw;bottom:6vh;font:500 13px/1 system-ui;opacity:.55;letter-spacing:.06em}" +
+    "@media (max-width:760px){.cols{grid-template-columns:1fr}}" +
+    // Image slides: the frame styling from the reference deck, verbatim.
+    ".slide.img-slide{padding:0}" +
+    ".img-frame{width:100%;height:100%;display:flex;align-items:center;justify-content:center}" +
+    ".img-frame img{max-width:80vw;max-height:80vh;width:auto;height:auto;object-fit:contain;display:block;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.5)}";
+
+  // Slide bodies come straight from the Collate tab's ordered item list: a blank
+  // slide is an empty section; an image slide is the reference deck's img-frame.
+  function collateSlides(parts) {
+    var items = collate.items;
+    if (!items.length) { parts.push('<section class="slide"></section>'); return; }
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      if (it.kind === "image" && it.dataURL) {
+        parts.push('<section class="slide img-slide"><div class="img-frame"><img src="' + it.dataURL +
+          '" alt="' + escAttr(it.alt || "") + '"></div></section>');
+      } else {
+        parts.push('<section class="slide"></section>');
+      }
+    }
+  }
+
+  function deckWorld(N, WH) {
+    var blob = state.blob.enabled ? deckBlobLayer(N) : "", mesh = deckMesh(N, WH);
+    var c = state.composite, topIsBlob = c.top === "blob", blend = c.blend, op = c.opacity / 100, en = c.enabled;
+    function styleFor(isTop) {
+      if (!isTop) return "";
+      return en ? ' style="mix-blend-mode:' + blend + ';opacity:' + op + '"' : ' style="display:none"';
+    }
+    var blobG = state.blob.enabled ? ('<g id="sbsBlob"' + styleFor(topIsBlob) + ">" + blob + "</g>") : "";
+    var polyG = '<g id="sbsPoly"' + styleFor(!topIsBlob) + ">" + mesh.inner + "</g>";
+    var stack = topIsBlob ? (polyG + blobG) : (blobG + polyG);
+    var bgRect = '<rect x="-200" y="-200" width="' + (DK.W + 400) + '" height="' + (WH + 400) +
+      '" fill="' + state.blob.bg + '"/>';
+    return { inner: bgRect + stack, D: mesh.D };
+  }
+
+  function deckCfgObj(D, N) {
+    var amb = hexToRgb(state.light.ambient), dif = hexToRgb(state.light.diffuse), base = hexToRgb(state.poly.base);
+    return "{N:" + N + ",VIEW_W:" + DK.W + ",SLIDE_H:" + DK.SH + ",SIGMA:" + DK.SIGMA +
+      ",LZ:" + state.light.distance + ",INT:" + (state.light.intensity / 100) + ',MODE:"' + state.poly.mode + '",EDGE:' + state.poly.edge +
+      ",AMB:[" + amb.r + "," + amb.g + "," + amb.b + "],DIF:[" + dif.r + "," + dif.g + "," + dif.b + "],BASE:[" + base.r + "," + base.g + "," + base.b + "]" +
+      ",SPEED:" + state.light.speed + ",D:" + JSON.stringify(D) + "}";
+  }
+
+  // Shared world build: the background SVG + its runtime config, for both outputs.
+  function deckShared() {
+    var N = deckN(), WH = N * DK.SH;
+    var world = deckWorld(N, WH);
+    return { N: N, cfg: deckCfgObj(world.D, N),
+             svg: '<svg id="sbsSvg" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">' +
+                  '<g id="sbsWorld">' + world.inner + "</g></svg>" };
+  }
+
+  // Background-only snippet to paste behind your own full-screen slides.
+  function buildDeck(mode) {
+    var d = deckShared();
+    return '<div id="sbsBg" aria-hidden="true" style="position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden">' +
+      d.svg + "</div>" +
+      "<scr" + "ipt>" + DECK_RUNTIME +
+      ";(function(){var C=" + d.cfg + ";" +
+      "C.scrollTop=function(){return window.scrollY||document.documentElement.scrollTop||0;};" +
+      "C.viewportH=function(){return window.innerHeight;};" +
+      "if(Math.round(document.documentElement.scrollHeight/window.innerHeight)!==" + d.N + ")" +
+      "console.warn('[deck] host should have " + d.N + " full-viewport slides or the river will desync');" +
+      "sbsStart(C);})();<\/scr" + "ipt>";
+  }
+
+  // Standalone deck as an ARRAY of string parts: with images baked in as data URIs
+  // the document reaches tens of MB, so it goes straight to Blob() — never joined.
+  function buildDeckParts() {
+    var d = deckShared(), parts = [];
+    parts.push("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\">" +
+      '<meta name="viewport" content="width=device-width,initial-scale=1"><title>Slide Deck</title>' +
+      "<style>" + DECK_CSS + "</style></head><body>");
+    parts.push('<div id="sbsBg" aria-hidden="true">');
+    parts.push(d.svg);
+    parts.push('</div><main id="sbsDeck">');
+    collateSlides(parts);
+    parts.push("</main>");
+    parts.push("<scr" + "ipt>" + DECK_RUNTIME +
+      ";(function(){var C=" + d.cfg + ";" +
+      'C.scrollTop=function(){return document.getElementById("sbsDeck").scrollTop;};' +
+      'C.viewportH=function(){return document.getElementById("sbsDeck").clientHeight;};' +
+      "C.controller=function(){" + DECK_CONTROLLER_A + d.N + DECK_CONTROLLER_B + "};sbsStart(C);})();<\/scr" +
+      "ipt></body></html>");
+    return parts;
+  }
+
+  function downloadDeck() {
+    try {
+      var parts = buildDeckParts();
+      var blob = new Blob(parts, { type: "text/html" });
+      var a = document.createElement("a");
+      var url = URL.createObjectURL(blob);
+      a.href = url; a.download = "slide-deck.html";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      toast("Deck downloaded — " + deckN() + " slides, " + fmtBytes(blob.size));
+      updateMemMeter();
+    } catch (e) { logErr("deck.download", e); toast("Deck export failed — see error log"); }
+  }
+
+  /* ===================== Boot ===================== */
+  try { initControls(); safeRender(); } catch (e) { logErr("boot", e); }
+  try { initCollate(); } catch (e) { logErr("boot.collate", e); }
+
+})();
+</script>
+</body>
+</html>

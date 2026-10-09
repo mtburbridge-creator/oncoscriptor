@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/backgenapp", "destination": "/backgenapp/index.html" },
+    { "source": "/backgenapp/:path*", "destination": "/backgenapp/index.html" }
+  ]
+}
