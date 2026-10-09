@@ -1,0 +1,65 @@
+{
+  "_note": "Starter settings for Slide Background Studio, taken from the Studio's built-in preset A (the only saved preset; its slow drifting light and 40 percent overlay blob are the calmest look available) and padded with the Studio defaults for the keys the preset leaves out. Replace this file by opening slides/studio/index.html, choosing a look in the Design tab, clicking Copy settings, and pasting the clipboard JSON here. tools/build-deck.js applies this file to every deck.",
+  "v": 1,
+  "app": "slide-background-studio",
+  "aspect": "16:9",
+  "style": "poly",
+  "poly": {
+    "mode": "fss",
+    "density": 160,
+    "edge": 0,
+    "base": "#0a032b",
+    "colors": ["#34e0a1"],
+    "seed": 1234
+  },
+  "light": {
+    "motion": "drift",
+    "speed": 6,
+    "ambient": "#061b32",
+    "diffuse": "#353d7e",
+    "distance": 70,
+    "intensity": 157,
+    "vx": -0.82,
+    "vy": 0.57
+  },
+  "orbs": {
+    "colors": ["#1b2a5e", "#3d5a9e", "#6b4ea8"],
+    "count": 6,
+    "size": 55,
+    "softness": 72,
+    "blend": "screen",
+    "drift": true,
+    "speed": 16,
+    "seed": 4242
+  },
+  "grid": {
+    "color": "#2f3d63",
+    "tint": "#0b1730",
+    "spacing": 46,
+    "thickness": 1.4,
+    "dot": 1.8,
+    "fade": 55
+  },
+  "blob": {
+    "bg": "#001220",
+    "color": "#545454",
+    "orientation": "nwse",
+    "fixedEnds": true,
+    "enabled": true,
+    "top": 45,
+    "right": 60,
+    "bottom": 60,
+    "left": 45,
+    "complexity": 2,
+    "contrast": 30,
+    "gap": 50,
+    "steps": 1,
+    "seed": 9876
+  },
+  "composite": {
+    "top": "blob",
+    "blend": "overlay",
+    "opacity": 40,
+    "enabled": true
+  }
+}
