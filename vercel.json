@@ -6,7 +6,17 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/backgenapp", "destination": "/backgenapp/index.html" },
-    { "source": "/backgenapp/:path*", "destination": "/backgenapp/index.html" }
+    {
+      "source": "/api/:__route*",
+      "destination": "/api/router"
+    },
+    {
+      "source": "/backgenapp",
+      "destination": "/backgenapp/index.html"
+    },
+    {
+      "source": "/backgenapp/:path*",
+      "destination": "/backgenapp/index.html"
+    }
   ]
 }

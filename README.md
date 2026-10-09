@@ -18,7 +18,7 @@ A pipeline that turns a patient-facing oncology video idea into a script, a talk
 ```bash
 npm ci
 npm test                                   # state machine checks
-node tools/test-auth.js && node tools/test-ui.js && node tools/test-routine.js && node tools/test-deck.js
+node tools/test-auth.js && node tools/test-ui.js && node tools/test-routine.js && node tools/test-router.js && node tools/test-deck.js
 node tools/project.js                      # CLI usage
 node tools/project.js status               # every project and what it waits on
 ```

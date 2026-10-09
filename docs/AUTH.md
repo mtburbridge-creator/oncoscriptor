@@ -2,7 +2,7 @@
 
 Passkey only, one user, no database. This page covers the environment variables, the one-time enrollment, how sessions and the middleware work, what the design does and does not defend against, and the sources consulted while building it.
 
-Files: `middleware.js` (repo root), `api/auth/*.js`, `api/_lib/session.js`, `api/_lib/ratelimit.js`, `web/login.html`, `web/login.js`, `tools/test-auth.js`.
+Files: `middleware.js` (repo root), `api/_auth/*.js`, `api/_lib/session.js`, `api/_lib/ratelimit.js`, `web/login.html`, `web/login.js`, `tools/test-auth.js`.
 
 ## Environment variables
 
