@@ -1,0 +1,308 @@
+{
+  "slug": "immunotherapy-side-effects",
+  "title": "What to expect from immunotherapy side effects",
+  "audience": "patient",
+  "target_minutes": 10,
+  "phase": "done",
+  "created": "2026-10-09",
+  "updated": "2026-10-09T14:07:18.484Z",
+  "idea": "ideas/immunotherapy-side-effects.md",
+  "tasks": {
+    "research.forums": {
+      "owner": "hermes",
+      "status": "done",
+      "updated": "2026-10-09T13:50:50.191Z",
+      "round": 1
+    },
+    "research.literature": {
+      "owner": "hermes",
+      "status": "done",
+      "updated": "2026-10-09T13:50:50.226Z",
+      "round": 1
+    },
+    "research.sources": {
+      "owner": "claude",
+      "status": "done",
+      "updated": "2026-10-09T13:54:35.963Z",
+      "round": 1
+    },
+    "research.news": {
+      "owner": "claude",
+      "status": "done",
+      "updated": "2026-10-09T13:56:59.785Z",
+      "round": 1
+    },
+    "synthesis": {
+      "owner": "claude",
+      "status": "done",
+      "updated": "2026-10-09T13:58:10.403Z",
+      "needs": [
+        "research.forums",
+        "research.literature",
+        "research.sources",
+        "research.news"
+      ],
+      "round": 1
+    },
+    "script.draft": {
+      "owner": "claude",
+      "status": "done",
+      "updated": "2026-10-09T14:00:12.272Z",
+      "round": 1
+    },
+    "script.revise": {
+      "owner": "claude",
+      "status": "done",
+      "updated": "2026-10-09T14:00:48.986Z",
+      "round": 1
+    },
+    "outline.draft": {
+      "owner": "claude",
+      "status": "done",
+      "updated": "2026-10-09T14:02:46.432Z",
+      "round": 1
+    },
+    "images.prompts": {
+      "owner": "claude",
+      "status": "done",
+      "updated": "2026-10-09T14:02:46.571Z",
+      "round": 1
+    },
+    "images.generate": {
+      "owner": "hermes",
+      "status": "done",
+      "updated": "2026-10-09T14:06:11.723Z",
+      "needs": [
+        "images.reprompt"
+      ],
+      "round": 2
+    },
+    "images.reprompt": {
+      "owner": "claude",
+      "status": "done",
+      "updated": "2026-10-09T14:06:10.297Z",
+      "round": 1
+    },
+    "slides.build": {
+      "owner": "claude",
+      "status": "done",
+      "updated": "2026-10-09T14:07:17.894Z",
+      "round": 1
+    },
+    "package.build": {
+      "owner": "claude",
+      "status": "done",
+      "updated": "2026-10-09T14:07:18.223Z",
+      "round": 1
+    },
+    "learn": {
+      "owner": "claude",
+      "status": "done",
+      "updated": "2026-10-09T14:07:18.483Z",
+      "round": 1
+    }
+  },
+  "script_version": 2,
+  "outline_version": 1,
+  "approved": {
+    "script": true,
+    "outline": true
+  },
+  "history": [
+    {
+      "at": "2026-10-09T13:49:24.269Z",
+      "msg": "phase research (created)"
+    },
+    {
+      "at": "2026-10-09T13:49:35.979Z",
+      "msg": "research.forums -> running"
+    },
+    {
+      "at": "2026-10-09T13:49:36.015Z",
+      "msg": "research.literature -> running"
+    },
+    {
+      "at": "2026-10-09T13:50:50.191Z",
+      "msg": "research.forums -> done"
+    },
+    {
+      "at": "2026-10-09T13:50:50.226Z",
+      "msg": "research.literature -> done"
+    },
+    {
+      "at": "2026-10-09T13:50:50.261Z",
+      "msg": "research.sources -> running"
+    },
+    {
+      "at": "2026-10-09T13:54:35.964Z",
+      "msg": "research.sources -> done"
+    },
+    {
+      "at": "2026-10-09T13:54:36.000Z",
+      "msg": "research.news -> running"
+    },
+    {
+      "at": "2026-10-09T13:56:59.785Z",
+      "msg": "research.news -> done"
+    },
+    {
+      "at": "2026-10-09T13:56:59.828Z",
+      "msg": "synthesis -> running"
+    },
+    {
+      "at": "2026-10-09T13:58:10.403Z",
+      "msg": "synthesis -> done"
+    },
+    {
+      "at": "2026-10-09T13:58:10.404Z",
+      "msg": "phase draft (synthesis done)"
+    },
+    {
+      "at": "2026-10-09T13:58:10.443Z",
+      "msg": "script.draft -> running"
+    },
+    {
+      "at": "2026-10-09T14:00:12.272Z",
+      "msg": "script.draft -> done"
+    },
+    {
+      "at": "2026-10-09T14:00:12.272Z",
+      "msg": "phase script_review (draft done)"
+    },
+    {
+      "at": "2026-10-09T14:00:12.310Z",
+      "msg": "feedback on script v1"
+    },
+    {
+      "at": "2026-10-09T14:00:12.311Z",
+      "msg": "script.revise queued (round 1)"
+    },
+    {
+      "at": "2026-10-09T14:00:12.391Z",
+      "msg": "script.revise -> running"
+    },
+    {
+      "at": "2026-10-09T14:00:48.986Z",
+      "msg": "script.revise -> done"
+    },
+    {
+      "at": "2026-10-09T14:00:49.029Z",
+      "msg": "script approved at v2"
+    },
+    {
+      "at": "2026-10-09T14:00:49.029Z",
+      "msg": "phase outline_images (script approved)"
+    },
+    {
+      "at": "2026-10-09T14:00:49.103Z",
+      "msg": "outline.draft -> running"
+    },
+    {
+      "at": "2026-10-09T14:02:46.433Z",
+      "msg": "outline.draft -> done"
+    },
+    {
+      "at": "2026-10-09T14:02:46.473Z",
+      "msg": "images.prompts -> running"
+    },
+    {
+      "at": "2026-10-09T14:02:46.571Z",
+      "msg": "images.prompts -> done"
+    },
+    {
+      "at": "2026-10-09T14:02:46.659Z",
+      "msg": "images.generate -> running"
+    },
+    {
+      "at": "2026-10-09T14:04:12.876Z",
+      "msg": "images.generate -> done"
+    },
+    {
+      "at": "2026-10-09T14:04:12.877Z",
+      "msg": "phase review (outline and images ready)"
+    },
+    {
+      "at": "2026-10-09T14:05:07.489Z",
+      "msg": "image decisions: 12 (2 to iterate)"
+    },
+    {
+      "at": "2026-10-09T14:05:07.489Z",
+      "msg": "images.reprompt queued (round 1)"
+    },
+    {
+      "at": "2026-10-09T14:05:07.602Z",
+      "msg": "images.reprompt -> running"
+    },
+    {
+      "at": "2026-10-09T14:06:10.297Z",
+      "msg": "images.reprompt -> done"
+    },
+    {
+      "at": "2026-10-09T14:06:10.345Z",
+      "msg": "images.generate -> running"
+    },
+    {
+      "at": "2026-10-09T14:06:11.723Z",
+      "msg": "images.generate -> done"
+    },
+    {
+      "at": "2026-10-09T14:06:11.762Z",
+      "msg": "image decisions: 2 (0 to iterate)"
+    },
+    {
+      "at": "2026-10-09T14:06:11.800Z",
+      "msg": "outline approved at v1"
+    },
+    {
+      "at": "2026-10-09T14:06:11.839Z",
+      "msg": "slide order set: 01,03,02,04,05,06,07,08,11"
+    },
+    {
+      "at": "2026-10-09T14:06:11.895Z",
+      "msg": "phase slides (review finished)"
+    },
+    {
+      "at": "2026-10-09T14:06:23.753Z",
+      "msg": "slides.build -> running"
+    },
+    {
+      "at": "2026-10-09T14:07:17.894Z",
+      "msg": "slides.build -> done"
+    },
+    {
+      "at": "2026-10-09T14:07:17.894Z",
+      "msg": "phase package (deck built)"
+    },
+    {
+      "at": "2026-10-09T14:07:17.977Z",
+      "msg": "package.build -> running"
+    },
+    {
+      "at": "2026-10-09T14:07:18.223Z",
+      "msg": "package.build -> done"
+    },
+    {
+      "at": "2026-10-09T14:07:18.223Z",
+      "msg": "phase done (package built)"
+    },
+    {
+      "at": "2026-10-09T14:07:18.309Z",
+      "msg": "learn -> running"
+    },
+    {
+      "at": "2026-10-09T14:07:18.484Z",
+      "msg": "learn -> done"
+    }
+  ],
+  "slides_order": [
+    "01",
+    "03",
+    "02",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "11"
+  ]
+}

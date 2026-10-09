@@ -1,0 +1,81 @@
+# What should you expect from immunotherapy side effects?
+
+Target 10 minutes, 1460 words, 2026-10-09, immunotherapy-side-effects, v2
+
+## Cold open
+*About 0.5 minutes*
+
+Your oncologist has recommended immunotherapy, your first dose is coming up or has just happened, and someone has told you the side effects are "different from chemo," without saying what that means. This video answers one question, what should you expect from immunotherapy side effects, by covering which ones are common and which are rare, when they show up, how they are treated, and when to pick up the phone.
+
+## Disclaimer
+*About 0.25 minutes*
+
+This video is general education, not medical advice. Your situation is your own, and the right choices for you come from the team that knows your case. Please talk with your oncologist before acting on anything you hear here.
+
+## What is immunotherapy, and why does it cause side effects?
+*About 1.75 minutes*
+
+Your immune system is the network of cells in your body that finds and clears out germs and damaged cells. A checkpoint inhibitor is a type of immunotherapy, which means a treatment that uses your own immune system to attack cancer [S1]. Your immune system has built-in brakes called checkpoints. They stop your immune cells from harming your own healthy cells [S1]. Some cancers use those brakes to switch your immune cells off [S1]. A checkpoint inhibitor blocks that off signal, so your immune cells can find and attack the cancer again [S1]. The drugs have names like pembrolizumab, nivolumab, atezolizumab, and ipilimumab, and they target different brakes, with names like PD-1, PD-L1, and CTLA-4 [S4]. Most are given as an infusion into a vein, and some can now be given as an injection under the skin [S4].
+
+Here is the key idea for side effects. The same release of the brake lets your immune system attack healthy parts of your body too [S4]. That is why these side effects are called immune-related [S6]. They are different from the side effects of chemotherapy, the drugs that kill fast-dividing cells [S6]. They are not mainly about hair loss or low blood counts. They are about inflammation, which means your immune system attacking a part of you, and it can show up in almost any organ [S1]. Doctors cannot reliably predict who will get side effects, when they will start, or how severe they will be [S1]. So you and your team watch for them together.
+
+## Which side effects are common, and which are rare?
+*About 1.75 minutes*
+
+Let's start with what is common. The three you are most likely to notice are tiredness, a rash or itching, and diarrhea [S1]. Some people also get a cough, nausea, a poor appetite, constipation, or achy muscles and joints [S4]. Skin changes are common, and very few of them are serious [S5]. Some people feel a mild reaction during the infusion itself, such as a low fever, chills, or a headache [S5].
+
+How many people get side effects? One study followed 387 people with melanoma, a skin cancer, who took pembrolizumab or nivolumab after surgery [S3]. About 7 in 10 had an immune-related side effect during treatment, and nearly 9 in 10 of those side effects were mild [S3]. You are unlikely to get all of the side effects on the list your team gives you [S9]. Side effects are more likely if you take two immunotherapy drugs together, or immunotherapy along with chemotherapy [S5].
+
+Now the rare ones. The immune system can inflame the lungs, the bowel, the liver, the hormone glands, the heart muscle, the kidneys, or the nerves [S1]. For example, with pembrolizumab, lung inflammation happened in about 3 in 100 people and liver inflammation in fewer than 1 in 100 [S10]. These are rare, but they can be serious or life-threatening, especially if they go untreated [S5]. Across 112 clinical trials, deaths from any side effect were between about 4 and 12 in 1,000 people, depending on the drugs [S15]. That number is small, and the way it stays small is catching problems early [S5].
+
+## When do side effects start, and how long do they last?
+*About 1.5 minutes*
+
+Most side effects show up in the first few weeks or months of treatment [S7]. Skin symptoms usually start in the first several weeks [S5]. Diarrhea and bowel inflammation often start in the first six to eight weeks [S5]. But there is no safe window. Side effects can begin at any time after you start, and they can begin after your treatment has finished, sometimes months later, and in some cases a year or more [S9] [S10] [S11]. That is why your team keeps checking blood tests for your thyroid, liver, and kidneys before and during treatment [S10].
+
+How long do they last? Many side effects settle once they are treated. For example, bowel symptoms often return to normal within two to four weeks of treatment [S7]. Some last longer. In the melanoma study, about 4 in 10 people had a side effect that was still there three months after treatment ended, though almost all of those were mild [S3]. The ones most likely to stick around involve the hormone glands [S3]. Examples are an underactive thyroid, or adrenal glands that no longer make enough cortisol, a hormone your body needs to handle stress [S3]. Those are managed with replacement hormone pills, sometimes for life [S5]. Joint pain and some eye problems can also linger [S3].
+
+## What happens if you get a side effect? Will treatment stop?
+*About 1.75 minutes*
+
+Here is what usually happens. First, your team grades how severe the side effect is, following written guidelines that oncologists use for exactly this [S13] [S14]. Mild side effects are often treated with a cream, a pill, or closer monitoring, and your treatment continues [S5]. For moderate or severe ones, the first step is often to pause the immunotherapy, and pausing usually stops the side effect too [S5]. Many side effects are treated with steroids, which means medicines that calm the immune system down, given as a pill, through a vein, as a cream, or as eye drops [S5]. Steroids work best when they are started early, when symptoms first appear [S5]. They are then lowered slowly over weeks, because stopping too fast can bring the side effect back [S5].
+
+You may have read that steroids cancel out immunotherapy. Here is what the trusted sources say: steroids are the standard treatment for these side effects, and the real danger is a side effect that goes untreated [S5]. If treatment is paused for a severe side effect, your team looks at how well the cancer has responded and talks through the risks and benefits of restarting with you [S5]. At one major cancer center, restarting after bowel inflammation is described as standard care [S7]. For life-threatening reactions, the drug is usually stopped for good [S10].
+
+One more worry people share. Getting a side effect does not mean the treatment is failing [S7]. And not getting one does not mean it is not working, because side effects simply cannot be predicted [S1].
+
+## What you can do
+*About 1.25 minutes*
+
+Things to discuss with your team before your next dose. First, ask for the 24-hour phone number and save it in your phone, because some side effects can get serious quickly [S9]. Second, ask for an immunotherapy wallet card that lists your drug and your team's contact numbers [S5]. Show it to any doctor or emergency department you visit, during and after treatment [S9]. Third, agree on what to call about. Common thresholds include these [S11]:
+
+- more than three watery stools in a day, or any blood in your stool
+- a fever of 100.4 F or higher
+- a new or worsening cough, or shortness of breath
+- yellow skin or eyes, or severe belly pain
+- a change in your vision, or confusion
+ Chest pain or trouble breathing is an emergency call, not a message [S9]. Fourth, do not take anti-diarrhea medicine, a new supplement, or an herbal remedy without asking first [S11]. Fifth, tell your team before you start any new medicine from another doctor [S11]. And keep a short daily note of how you feel, so a change is easy to describe when you call.
+
+## Recap
+*About 0.75 minutes*
+
+Checkpoint inhibitors release a brake on your immune system, and that same release causes their side effects [S1]. The common ones are tiredness, rash, and diarrhea, and most side effects are mild and treatable [S1] [S5]. Rare ones can affect the lungs, liver, hormone glands, or heart, and catching them early is what keeps them from becoming serious [S5]. They can start in the first weeks or long after treatment ends [S5] [S11]. A side effect is usually treated with a pause and steroids, and many people restart [S5]. The most useful thing you can do is call on the day something changes [S6].
+
+## Talk to your oncologist
+*About 0.5 minutes*
+
+Before your next appointment, write down this question: "Which side effects are most likely with my drug, what exactly should I call you about, and at what number?" Put the answer on the fridge and share it with whoever is looking after you. You do not have to tell a mild side effect from a serious one on your own. That is your team's job, and they would rather hear from you early.
+
+## Sources
+- [S1] Immune Checkpoint Inhibitors, National Cancer Institute, 2022
+- [S3] Long-Term Side Effects of Immune Checkpoint Inhibitors (Cancer Currents), National Cancer Institute, 2021
+- [S4] Immune Checkpoint Inhibitors and Their Side Effects, American Cancer Society, 2025
+- [S5] NCCN Guidelines for Patients: Immunotherapy Side Effects: Immune Checkpoint Inhibitors, National Comprehensive Cancer Network, 2026
+- [S6] Immunotherapy Side Effects: Immune Checkpoint Inhibitors (infographic), National Comprehensive Cancer Network, 2026
+- [S7] Immune Checkpoint Inhibitor Side Effects, MD Anderson Cancer Center, 2026
+- [S9] What is immunotherapy and how is it given?, Macmillan Cancer Support, 2024
+- [S10] KEYTRUDA (pembrolizumab) prescribing information, DailyMed / FDA label, 2026
+- [S11] Managing Your Immunotherapy Side Effects, Memorial Sloan Kettering Cancer Center, 2023
+- [S13] Management of Immune-Related Adverse Events: ASCO Guideline Update, Journal of Clinical Oncology, 2021
+- [S14] Management of toxicities from immunotherapy: ESMO Clinical Practice Guideline, Annals of Oncology, 2022
+- [S15] Fatal Toxic Effects Associated With Immune Checkpoint Inhibitors: A Systematic Review and Meta-analysis, JAMA Oncology, 2018

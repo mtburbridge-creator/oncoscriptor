@@ -1,0 +1,56 @@
+# OncoGenik CI. Runs the tool tests and the project validator.
+# Optional suites are gated on their file existing, so the pipeline stays
+# green while those tools are still being written.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Unit tests
+        run: node tools/test.js
+
+      - name: Validate projects
+        run: node tools/project.js validate
+
+      - name: Auth tests
+        if: hashFiles('tools/test-auth.js') != ''
+        run: node tools/test-auth.js
+
+      - name: UI tests
+        if: hashFiles('tools/test-ui.js') != ''
+        run: node tools/test-ui.js
+
+      - name: Routine hook tests
+        if: hashFiles('tools/test-routine.js') != ''
+        run: node tools/test-routine.js
+
+      - name: Install Chromium for the deck test
+        if: hashFiles('tools/test-deck.js') != ''
+        run: |
+          set -euo pipefail
+          npx playwright-core install --with-deps chromium
+          echo "CHROMIUM_PATH=$(node -e 'console.log(require("playwright-core").chromium.executablePath())')" >> "$GITHUB_ENV"
+
+      - name: Deck tests
+        if: hashFiles('tools/test-deck.js') != ''
+        run: node tools/test-deck.js

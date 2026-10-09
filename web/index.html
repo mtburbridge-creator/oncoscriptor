@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>OncoGenik</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#/">OncoGenik</a>
+  <nav class="nav" aria-label="Main">
+    <a href="#/" data-nav="dashboard">Dashboard</a>
+    <a href="#/ideas" data-nav="ideas">Ideas</a>
+    <a href="#/guidelines" data-nav="guidelines">Guidelines</a>
+  </nav>
+  <button class="btn ghost" id="signout" type="button">Sign out</button>
+</header>
+<main id="app" class="app" aria-live="polite">
+  <p class="muted">Loading…</p>
+</main>
+<div id="toast" class="toast" role="status" hidden></div>
+<script src="/vendor/marked.min.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

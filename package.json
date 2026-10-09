@@ -1,0 +1,22 @@
+{
+  "name": "oncogenik",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OncoGenik: patient-facing oncology video scripts, outlines, and slide decks",
+  "license": "UNLICENSED",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node tools/stage-static.js",
+    "test": "node tools/test.js",
+    "validate": "node tools/project.js validate",
+    "deck": "node tools/build-deck.js"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "^13.1.1"
+  },
+  "devDependencies": {
+    "@simplewebauthn/browser": "^13.1.0",
+    "marked": "^18.1.0",
+    "playwright-core": "^1.64.0"
+  }
+}
