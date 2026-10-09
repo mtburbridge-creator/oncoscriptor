@@ -12,6 +12,10 @@ The web app is static files in `web/` (staged into `dist/` by `tools/stage-stati
 
 Session variables (`SESSION_SECRET`, the passkey credential, `SETUP_TOKEN`) belong to the auth layer; see `docs/AUTH.md`.
 
+## One function
+
+Vercel's Hobby plan deploys at most 12 serverless functions. Every `/api/*` URL is rewritten by `vercel.json` to `api/router.js`, the only deployed function, which dispatches to handler modules in underscore folders such as `api/_projects/`. Vercel skips files under underscore paths when counting functions. `tools/test-router.js` fails if a new file under `api/` would become a second function, so new endpoints go into the router's table instead.
+
 ## Routes
 
 Static pages: `/` (the app, `web/index.html`), `/login` (auth layer), `/backgenapp` (the Studio, public). Front-end routes are hashes: `#/` dashboard, `#/ideas`, `#/projects/<slug>`, `#/guidelines/<file>`.
@@ -78,7 +82,7 @@ Reads use the Contents API with `?ref=<branch>`. Text comes back base64 in JSON;
 
 ## Tests
 
-`node tools/test-ui.js` runs with no network: `commitFiles` against a recorded `fetch` (call sequence, tree entries, base64 blob content, retry on 422, give-up on a second 409), the `api/file.js` path guard, and every handler against an in-memory GitHub module and a stubbed session.
+`node tools/test-ui.js` runs with no network: `commitFiles` against a recorded `fetch` (call sequence, tree entries, base64 blob content, retry on 422, give-up on a second 409), the `api/_file.js` path guard, and every handler against an in-memory GitHub module and a stubbed session.
 
 ## Sources
 

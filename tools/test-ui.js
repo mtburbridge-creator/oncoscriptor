@@ -169,7 +169,7 @@ installMock("mock:session", {
   /* ---------- api/file.js path guard ---------- */
 
   await t("file handler rejects paths outside the content roots or with traversal", async () => {
-    const file = require(path.join(ROOT, "api/file.js"));
+    const file = require(path.join(ROOT, "api/_file.js"));
     const bad = ["", "../package.json", "projects/../package.json", "projects/x/../../.env", "api/_lib/session.js",
       "/projects/x/script/v1.md", "projects/x/", "projects//x/a.md", "projects/x/./a.md", "projects\\x\\a.md",
       "middleware.js", "ideasx/a.md", "projects/x/a b.md", "projects/x/a.md?x=1"];
@@ -195,7 +195,7 @@ installMock("mock:session", {
   });
 
   await t("file handler returns 401 without a session and serves images as bytes", async () => {
-    const file = require(path.join(ROOT, "api/file.js"));
+    const file = require(path.join(ROOT, "api/_file.js"));
     sessionOK = false;
     let hits = 0;
     global.fetch = async () => { hits++; return { ok: true, status: 200 }; };
@@ -241,14 +241,14 @@ installMock("mock:session", {
       return { sha: "C" + commits.length };
     }
   });
-  delete require.cache[require.resolve(path.join(ROOT, "api/projects/_shared.js"))];
-  const projects = require(path.join(ROOT, "api/projects/index.js"));
-  const projectOne = require(path.join(ROOT, "api/projects/[slug]/index.js"));
-  const action = require(path.join(ROOT, "api/projects/[slug]/action.js"));
-  const task = require(path.join(ROOT, "api/projects/[slug]/task.js"));
-  const ideas = require(path.join(ROOT, "api/ideas/index.js"));
-  const guidelines = require(path.join(ROOT, "api/guidelines/index.js"));
-  const proposal = require(path.join(ROOT, "api/guidelines/proposal.js"));
+  delete require.cache[require.resolve(path.join(ROOT, "api/_projects/_shared.js"))];
+  const projects = require(path.join(ROOT, "api/_projects/index.js"));
+  const projectOne = require(path.join(ROOT, "api/_projects/[slug]/index.js"));
+  const action = require(path.join(ROOT, "api/_projects/[slug]/action.js"));
+  const task = require(path.join(ROOT, "api/_projects/[slug]/task.js"));
+  const ideas = require(path.join(ROOT, "api/_ideas/index.js"));
+  const guidelines = require(path.join(ROOT, "api/_guidelines/index.js"));
+  const proposal = require(path.join(ROOT, "api/_guidelines/proposal.js"));
 
   await t("project list reads every project.json from one tree fetch and groups by waiting", async () => {
     const a = S.createProject({ title: "Alpha topic", target_minutes: 10 });

@@ -262,12 +262,12 @@ t("ratelimit: 5 failures in 10 minutes lock for an hour", () => {
 
 // ---- handlers ----------------------------------------------------------------
 
-const options = require(path.join(ROOT, "api/auth/options.js"));
-const verify = require(path.join(ROOT, "api/auth/verify.js"));
-const setupOptions = require(path.join(ROOT, "api/auth/setup-options.js"));
-const setupVerify = require(path.join(ROOT, "api/auth/setup-verify.js"));
-const logout = require(path.join(ROOT, "api/auth/logout.js"));
-const me = require(path.join(ROOT, "api/auth/me.js"));
+const options = require(path.join(ROOT, "api/_auth/options.js"));
+const verify = require(path.join(ROOT, "api/_auth/verify.js"));
+const setupOptions = require(path.join(ROOT, "api/_auth/setup-options.js"));
+const setupVerify = require(path.join(ROOT, "api/_auth/setup-verify.js"));
+const logout = require(path.join(ROOT, "api/_auth/logout.js"));
+const me = require(path.join(ROOT, "api/_auth/me.js"));
 
 const FAKE_CRED = {
   id: "dGVzdC1jcmVkZW50aWFsLWlk",
