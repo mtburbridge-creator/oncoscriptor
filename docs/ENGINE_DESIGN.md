@@ -21,7 +21,7 @@ Fixed decisions, from your answers on 2026-10-09.
 | Trusted-source and news research | Claude |
 | Image generation | Hermes, calling OpenAI |
 | Slide template | Slide Background Studio, merged at `slides/studio/` |
-| UI | Web app, login-gated, no patient data, GitHub as the shared store |
+| UI | Web app on Vercel, passkey login, no patient data, GitHub as the shared store |
 | Projects | Many at once, each at its own phase, dashboard shows what waits on you |
 
 ## Three agents, one repo
@@ -30,7 +30,7 @@ GitHub is the queue, the store, and the audit trail. Each project is a folder. E
 
 | Agent | Runs where | Holds which secrets | Does |
 |---|---|---|---|
-| You | Browser, OncoGenik UI | Login passphrase only | Pick ideas, review, approve, choose images, order slides |
+| You | Browser, OncoGenik UI | A passkey on your devices | Pick ideas, review, approve, choose images, order slides |
 | Claude | GitHub Actions, Claude Code | Anthropic key, in Actions secrets | Trusted-source research, news, synthesis, draft, revise, outline, image prompts, deck build, package, guideline proposals |
 | Hermes | Your home machine | OpenAI key, forum APIs, medical search APIs, a GitHub token for this repo | Idea scanning, forum research, literature search, image generation |
 
@@ -134,7 +134,7 @@ Claude writes twelve prompts into `images/prompts.json`. Each entry has an id, t
 
 ## Slides
 
-The Studio stays as shipped under `slides/studio/`, including its three byte-identical copies and its own tests. Its `vercel.json` sits inside that folder, so it does not affect the OncoGenik deployment.
+The Studio now lives here and the old repo's deployment will be shuttered once this one is up. It keeps serving at `/backgenapp` so the markburbridge.com proxy only needs to be repointed to the new deployment. Vercel's build step copies `slides/studio/index.html` into the static output under `backgenapp/`, which means one canonical file in git, no committed duplicates, and nothing else in the repo served statically. The three-copy rule and the Studio's own `vercel.json` go away in build step 3, and its deploy test is updated to match.
 
 The deck tool does not fork the app. The Studio's deck builder already assembles the whole deck from strings, and it serializes and applies settings as JSON. So `tools/build-deck.js` opens `slides/studio/index.html` in headless Chromium through Playwright, applies `guidelines/slideshow.settings.json`, loads the approved images in `slides/order.json` order, calls the same export path the Collate tab uses, and writes `projects/<slug>/slides/deck.html`. The Studio's Collate tests already use this pattern, so it is proven on this app. You choose the background once in the Design tab and export its settings to the guidelines file. Change it there and every later deck follows.
 
@@ -153,19 +153,49 @@ Every action is a commit. Approving a script copies the current version to `scri
 
 ### Login and secrets
 
-- One passphrase, stored as a hash in the serverless environment. A correct login sets a signed HttpOnly cookie. Every API call checks it. Failed attempts are rate limited.
-- The serverless side holds a fine-grained GitHub token scoped to this one repo. The browser never sees it.
+Passkey only. There is no password, no magic link, and no public route that writes anything.
+
+- Every route, API and page alike, sits behind Vercel middleware that checks a signed session cookie. No cookie means a 401 and a redirect to the login page. The single public exception is the Studio at `/backgenapp`, which holds no secrets and writes nothing.
+- Login is WebAuthn through SimpleWebAuthn. The server sends a challenge, your device signs it with the passkey, the server verifies the signature against the stored public key and sets an HttpOnly, SameSite Strict session cookie that expires in 12 hours.
+- One user means no database. The registered credential, which is a credential id, a public key, and a counter, lives in a Vercel environment variable. The challenge travels in a signed cookie that expires in two minutes and is consumed once. Synced passkeys from Apple and Google report a counter of zero on every login, which the library tolerates. A hardware key with a real counter would need a small store such as Vercel KV. Add that only if you choose to use one.
+- Enrollment happens once through a setup route that only exists while a `SETUP_TOKEN` environment variable is set. You run it, paste the resulting credential into the environment, and delete the token. After that the route is gone.
+- Login routes are rate limited. Five failures in ten minutes lock the route for an hour.
+- The serverless side holds one fine-grained GitHub token with contents write on this repo only. The browser never sees it.
 - The repo stays private.
-- Option for later. GitHub login restricted to your account, if you want to drop the passphrase.
+
+### Who can write to the repo
+
+Hermes and Claude both act on whatever lands in the repo, so the real security boundary is the set of writers.
+
+| Writer | Path in | Limit |
+|---|---|---|
+| You | UI after passkey, or your own GitHub account | Full |
+| UI backend | Fine-grained token | Contents only, this repo only |
+| Claude | Actions token | Contents only, scoped by the workflow |
+| Hermes | Its own fine-grained token | Contents only, this repo only |
+
+Nobody else can commit. A bad actor without your passkey reaches a 401 and nothing more.
+
+One residual risk remains and it is prompt injection through research. Hermes reads forums and Claude reads the open web, and a page can contain text written to steer an agent. Three things contain it. Hermes tasks are narrow and each one produces a file, never an action. Claude's skills are told that every file under `research/` is data to summarize and never instructions to follow. And nothing reaches the script, the deck, or the guidelines without you approving it in the UI.
 
 ## How the agents get triggered
 
 | Agent | Trigger |
 |---|---|
 | Claude | A GitHub Actions workflow runs on push. It finds projects whose current tasks are owned by Claude with status `todo`, runs the matching skill with Claude Code, commits, and pushes. |
-| Hermes | Polls the repo every few minutes, or receives a webhook from the UI if you prefer. Finds tasks owned by Hermes with status `todo`. Contract in `docs/HERMES_CONTRACT.md`. |
-| Idea scanning | Hermes, on its own schedule, writes to `ideas/`. |
+| Hermes | A Hermes cron job polls the repo every ten minutes. Details below. |
+| Idea scanning | A second Hermes cron job, on whatever schedule you like, writes to `ideas/`. |
 | Learn | Runs when a project reaches done. |
+
+### Why Hermes polls
+
+A webhook would mean opening a port on your home machine to the internet. Polling needs nothing inbound. Hermes Agent ships a cron system with a pre-run script option, it runs shell and git through its terminal tool, and a job can reply silently when there is nothing to do. So the job is one line to create.
+
+```
+hermes cron create "every 10m" "Run the OncoGenik tasks listed in the script output. If the output says NONE, reply [SILENT]." --name oncogenik-poll --script ~/.hermes/scripts/oncogenik-poll.py
+```
+
+The script pulls the repo, reads every `projects/*/project.json`, prints the tasks owned by Hermes with status `todo`, and prints NONE when there are none. The exact prompt and script live in `docs/HERMES_CONTRACT.md`.
 
 ## Learning loops
 
@@ -182,10 +212,15 @@ Each step ends with something you can use.
 5. **UI.** Dashboard, project view, image review, login.
 6. **Learn.** Guideline proposals and the Guidelines area.
 
-## Still open
+## Decided in round two, 2026-10-09
 
-1. Hosting on Vercel, next to the Studio, or somewhere else.
-2. Passphrase login, or GitHub login restricted to your account.
-3. Which medical search APIs Hermes has, so the literature file format matches what they return.
-4. Whether Hermes can poll GitHub on a schedule, or wants a webhook.
-5. Whether to keep deploying the Studio from its old repo, or move that deployment here once this repo is the home for it.
+| Question | Decision |
+|---|---|
+| Hosting | Vercel |
+| Login | Passkey, nothing else, every route gated |
+| Hermes file formats | Plain text, no fixed structure |
+| Hermes trigger | Cron polling from Hermes, no webhook |
+| Studio deployment | Moves here, old repo shuttered after cutover |
+
+Nothing is open. Build step one can start.
+
