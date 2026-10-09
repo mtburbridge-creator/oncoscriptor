@@ -1,0 +1,65 @@
+{
+  "decisions": {
+    "10": {
+      "decision": "reject",
+      "note": "The card and keys read as a stock product shot.",
+      "at": "2026-10-09T14:05:07.489Z"
+    },
+    "11": {
+      "decision": "approve",
+      "note": "",
+      "at": "2026-10-09T14:06:11.762Z"
+    },
+    "12": {
+      "decision": "reject",
+      "note": "Better, but the recap image already closes the deck well enough.",
+      "at": "2026-10-09T14:06:11.762Z"
+    },
+    "01": {
+      "decision": "approve",
+      "note": "",
+      "at": "2026-10-09T14:05:07.489Z"
+    },
+    "02": {
+      "decision": "approve",
+      "note": "",
+      "at": "2026-10-09T14:05:07.489Z"
+    },
+    "03": {
+      "decision": "approve",
+      "note": "",
+      "at": "2026-10-09T14:05:07.489Z"
+    },
+    "04": {
+      "decision": "approve",
+      "note": "",
+      "at": "2026-10-09T14:05:07.489Z"
+    },
+    "05": {
+      "decision": "approve",
+      "note": "",
+      "at": "2026-10-09T14:05:07.489Z"
+    },
+    "06": {
+      "decision": "approve",
+      "note": "",
+      "at": "2026-10-09T14:05:07.489Z"
+    },
+    "07": {
+      "decision": "approve",
+      "note": "",
+      "at": "2026-10-09T14:05:07.489Z"
+    },
+    "08": {
+      "decision": "approve",
+      "note": "",
+      "at": "2026-10-09T14:05:07.489Z"
+    },
+    "09": {
+      "decision": "reject",
+      "note": "Too clinical even with the equipment softened; we have enough medical settings.",
+      "at": "2026-10-09T14:05:07.489Z"
+    }
+  },
+  "updated": "2026-10-09T14:06:11.762Z"
+}

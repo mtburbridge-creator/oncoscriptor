@@ -1,0 +1,91 @@
+{
+  "version": 2,
+  "model": "openai",
+  "size": "1792x1024",
+  "prompts": [
+    {
+      "id": "01",
+      "section": "cold-open",
+      "purpose": "Set a calm, early-morning tone while the presenter names the question.",
+      "prompt": "An adult with silver hair in a soft cardigan standing at a kitchen window at dawn, holding a mug with both hands, face turned to the garden outside. Soft editorial illustration with painted texture, warm cream and sand palette with a sage green accent and gentle sky blue. Calm, attentive, quietly hopeful. 16:9 landscape, figure center-left, quiet open wall and window light on the right. No text, no logos, no identifiable faces, no needles, no blood.",
+      "status": "done"
+    },
+    {
+      "id": "02",
+      "section": "disclaimer",
+      "purpose": "A still, empty scene that lets the disclaimer be read without distraction.",
+      "prompt": "An empty armchair beside a small side table holding a folded blanket, a glass of water, and a closed notebook, in a sunlit living room with linen curtains. Soft editorial illustration with painted texture, warm cream and sand palette with a sage green accent and gentle sky blue. Calm, still, unhurried. 16:9 landscape, chair center-left, open soft-lit wall on the right. No text, no logos, no people, no needles, no blood.",
+      "status": "done"
+    },
+    {
+      "id": "03",
+      "section": "what-is-immunotherapy",
+      "purpose": "A gentle gate-and-path metaphor for a brake being released while the mechanism is explained.",
+      "prompt": "A wooden garden gate on a low stone wall standing half open, a gravel path leading between sage green hedges toward a sunlit lawn and a distant tree. Soft editorial illustration with painted texture, warm cream and sand palette with a sage green accent and gentle sky blue. Calm, gentle, inviting. 16:9 landscape, gate center-left, open sky and lawn on the right. No text, no logos, no people, no needles, no blood.",
+      "status": "done"
+    },
+    {
+      "id": "04",
+      "section": "what-is-immunotherapy",
+      "purpose": "Place the viewer in a soft clinic setting as the drug names and how they are given are described.",
+      "prompt": "A middle-aged adult with deep brown skin seated in a bright clinic waiting area, reading a blank leaflet, seen from behind, a tall window and a potted fig nearby. Soft editorial illustration with painted texture, warm cream and sand palette with a sage green accent and gentle sky blue. Calm, patient, reassuring. 16:9 landscape, figure center-left, open window light on the right, clinical details soft and distant. No text, no logos, no identifiable faces, no needles, no blood.",
+      "status": "done"
+    },
+    {
+      "id": "05",
+      "section": "common-and-rare",
+      "purpose": "Show ordinary tiredness at home while the common side effects are listed.",
+      "prompt": "An older adult with a round build resting on a sofa under a light knitted blanket, eyes closed and face turned toward the cushion, a cat curled at their feet, afternoon light through curtains. Soft editorial illustration with painted texture, warm cream and sand palette with a sage green accent and gentle sky blue. Calm, restful, tender. 16:9 landscape, figure center-left, quiet open space on the right. No text, no logos, no identifiable faces, no needles, no blood.",
+      "status": "done"
+    },
+    {
+      "id": "06",
+      "section": "common-and-rare",
+      "purpose": "Keep the mood steady and open outdoors while rare side effects and their numbers are discussed.",
+      "prompt": "A young adult with dark curly hair, a scarf, and headphones sitting on a park bench, face turned toward distant trees, a water bottle beside them, a dog walker far off. Soft editorial illustration with painted texture, warm cream and sand palette with a sage green accent and gentle sky blue. Calm, open, steady. 16:9 landscape, bench center-left, open park and sky on the right. No text, no logos, no identifiable faces, no needles, no blood.",
+      "status": "done"
+    },
+    {
+      "id": "07",
+      "section": "when-they-start",
+      "purpose": "A quiet marker of passing time for the section on when side effects start and how long they last.",
+      "prompt": "A blank paper calendar grid pinned to a kitchen wall beside a small potted plant and a hanging tea towel, a window showing a tree with fresh spring leaves. Soft editorial illustration with painted texture, warm cream and sand palette with a sage green accent and gentle sky blue. Calm, orderly, unhurried. 16:9 landscape, calendar center-left, open wall and window on the right. No text, no numbers, no logos, no people, no needles, no blood.",
+      "status": "done"
+    },
+    {
+      "id": "08",
+      "section": "if-you-get-one",
+      "purpose": "Show the simple act of calling the team from home as treatment and pausing are explained.",
+      "prompt": "A middle-aged adult with short gray hair sitting at a kitchen table talking on a phone, a cup of tea and a blank notebook in front of them, face turned toward the window. Soft editorial illustration with painted texture, warm cream and sand palette with a sage green accent and gentle sky blue. Calm, practical, reassured. 16:9 landscape, figure center-left, open window light on the right. No text, no logos, no identifiable faces, no needles, no blood.",
+      "status": "done"
+    },
+    {
+      "id": "09",
+      "section": "if-you-get-one",
+      "purpose": "A soft infusion-center conversation for the part about steroids, pausing, and restarting.",
+      "prompt": "A nurse and a seated patient in a cardigan talking in a bright corner of an infusion center, seen from behind the patient, a tall window and plant, equipment vague and distant. Soft editorial illustration with painted texture, warm cream and sand palette with a sage green accent and gentle sky blue. Calm, supportive, unhurried. 16:9 landscape, pair center-left, open window on the right. No text, no logos, no identifiable faces, no needles, no IV lines in focus, no blood.",
+      "status": "done"
+    },
+    {
+      "id": "10",
+      "section": "what-you-can-do",
+      "purpose": "The practical kit by the front door: card, phone, keys, for the what-you-can-do steps.",
+      "prompt": "A blank wallet card, a phone, and house keys resting on a wooden hallway table by a front door, a small dish with a single leaf, a coat on a hook, morning light from a side window. Soft editorial illustration with painted texture, warm cream and sand palette with a sage green accent and gentle sky blue. Calm, ready, orderly. 16:9 landscape, table center-left, open pale wall on the right. No text, no logos, no people, no needles, no blood.",
+      "status": "done"
+    },
+    {
+      "id": "11",
+      "section": "recap",
+      "purpose": "Two people walking together, a steady, companionable image for the recap.",
+      "prompt": "One adult in a light jacket walking alone with a small dog along a tree-lined path, seen from behind, warm low evening light and long soft shadows, a bench ahead. Soft editorial illustration with painted texture, warm cream and sand palette with a sage green accent and gentle sky blue. Calm, companionable, steady. 16:9 landscape, figure center-left, open path and glowing sky on the right. No text, no logos, no identifiable faces, no needles, no blood.",
+      "status": "done"
+    },
+    {
+      "id": "12",
+      "section": "talk-to-your-oncologist",
+      "purpose": "A warm consultation scene for the close, where the viewer is handed a question to bring.",
+      "prompt": "An adult in a knit sweater at a kitchen table on a video call, laptop open, seen from behind the shoulder, the screen a soft blur, a window with a plant. Soft editorial illustration with painted texture, warm cream and sand palette with a sage green accent and gentle sky blue. Calm, respectful, hopeful. 16:9 landscape, figure center-left, open window light on the right, no clinic. No text, no logos, no identifiable faces, no needles, no blood.",
+      "status": "done"
+    }
+  ]
+}
