@@ -22,7 +22,7 @@ Everything else — the baked SVG world, `sbsStart` runtime, the smooth-scroll c
 
 **Repo facts (verified).**
 - Single file: all CSS lives in the one head `<style>` (lines 7–93); all JS in one `"use strict"` IIFE `<script>` (lines 453–1661).
-- **Sync rule:** `background generator.html` (note the space in the filename) is a byte-identical copy. Every edit to `index.html` must end with `cp index.html "background generator.html"` and be verified with `cmp index.html "background generator.html"`.
+- **Sync rule (retired 2026-10-09):** `background generator.html` used to be a byte-identical copy kept with `cp`/`cmp`. The Studio now lives in OncoGenik as the single file `slides/studio/index.html`; the Vercel build copies it to `/backgenapp`, and `tests/deploy-config.js` fails if a second copy appears.
 - Current branch: `claude/beautiful-fermat-2dsea5` (HEAD `8634fa5`), remote `mtburbridge-creator/background-generator`, believed to carry **open PR #12**. Commit and push onto this existing branch; **do not open a new PR**, even if PR #12 cannot be verified from inside the environment — the existing PR (or the user) will carry the feature.
 - All line references in this plan are against the current 1663-line file.
 
