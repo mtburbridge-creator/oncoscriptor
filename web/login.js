@@ -3,6 +3,7 @@
 // startAuthentication({ optionsJSON }) and startRegistration({ optionsJSON })).
 (function () {
   "use strict";
+  var BASE = "/oncogenik";
 
   var $ = function (sel) { return document.querySelector(sel); };
 
@@ -56,11 +57,11 @@
     signinBtn.disabled = true;
     setStatus(signinStatus, "Waiting for your passkey…");
     try {
-      var options = await post("/api/auth/options");
+      var options = await post(BASE + "/api/auth/options");
       var assertion = await lib().startAuthentication({ optionsJSON: options });
-      await post("/api/auth/verify", assertion);
+      await post(BASE + "/api/auth/verify", assertion);
       setStatus(signinStatus, "Signed in. Redirecting…", "ok");
-      window.location.replace("/");
+      window.location.replace(BASE);
     } catch (err) {
       setStatus(signinStatus, explain(err, "signin"), "bad");
       signinBtn.disabled = false;
@@ -84,9 +85,9 @@
     setStatus(setupStatus, "Creating a passkey on this device…");
     try {
       var headers = { "x-setup-token": token };
-      var options = await post("/api/auth/setup-options", {}, headers);
+      var options = await post(BASE + "/api/auth/setup-options", {}, headers);
       var attestation = await lib().startRegistration({ optionsJSON: options });
-      var out = await post("/api/auth/setup-verify", attestation, headers);
+      var out = await post(BASE + "/api/auth/setup-verify", attestation, headers);
       $("#credential").value = out.PASSKEY_CREDENTIAL;
       $("#setup-result").classList.remove("hidden");
       setStatus(setupStatus, "Passkey created. Copy the value below into Vercel.", "ok");

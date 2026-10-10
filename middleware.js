@@ -5,25 +5,30 @@
 // project without a framework: this file at the repo root, a default export,
 // and `export const config = { matcher }`. Sources in docs/AUTH.md.
 //
+// The app lives under BASE (/oncogenik), served at markburbridge.com/oncogenik
+// through the frontpage proxy and at oncoscriptor.vercel.app/oncogenik directly.
+//
 // Rules
-//   public (no session needed): /login, /login.js, /api/auth/*, /backgenapp,
-//     /backgenapp/*, /vendor/*, /favicon.ico
+//   public (no session needed): BASE/login, BASE/login.js, BASE/favicon.svg,
+//     BASE/api/auth/*, BASE/vendor/*, /backgenapp, /backgenapp/*
 //   everything else needs a valid og_session cookie
-//     /api/*  -> 401 {"error":"unauthorized"}
-//     pages   -> 302 /login
+//     BASE/api/* and /api/*  -> 401 {"error":"unauthorized"}
+//     anything else          -> 302 to BASE/login, as a relative Location so a
+//                               visitor on markburbridge.com stays there
 //
 // The cookie contract is the one in api/_lib/session.js:
 //   og_session = base64url(payload JSON) "." base64url(HMAC-SHA256(payload bytes, SESSION_SECRET))
 
+export const BASE = "/oncogenik";
 const SESSION_COOKIE = "og_session";
-const PUBLIC_EXACT = new Set(["/login", "/login.js", "/backgenapp", "/favicon.ico"]);
-const PUBLIC_PREFIXES = ["/api/auth/", "/backgenapp/", "/vendor/"];
+const PUBLIC_EXACT = new Set([BASE + "/login", BASE + "/login.js", BASE + "/favicon.svg", "/backgenapp"]);
+const PUBLIC_PREFIXES = [BASE + "/api/auth/", BASE + "/vendor/", "/backgenapp/"];
 
-// Coarse filter: skip static vendor files and the favicon entirely. Every
-// other rule is enforced in code below, so a near-miss path such as
-// /login-other or /backgenappx is still protected.
+// Coarse filter: skip the static vendor files entirely. Every other rule is
+// enforced in code below, so a near-miss path such as /oncogenik/login-other
+// or /backgenappx is still protected.
 export const config = {
-  matcher: ["/((?!vendor/|favicon\\.ico).*)"],
+  matcher: ["/((?!oncogenik/vendor/).*)"],
 };
 
 export function isPublicPath(pathname) {
@@ -110,7 +115,7 @@ export default async function middleware(request) {
   const session = secret && cookie ? await verifySessionValue(cookie, secret) : null;
   if (session) return passThrough();
 
-  if (path === "/api" || path.startsWith("/api/")) {
+  if (path === "/api" || path.startsWith("/api/") || path === BASE + "/api" || path.startsWith(BASE + "/api/")) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
       headers: {
@@ -123,7 +128,7 @@ export default async function middleware(request) {
   return new Response(null, {
     status: 302,
     headers: {
-      location: new URL("/login", request.url).toString(),
+      location: BASE + "/login",
       "cache-control": "no-store",
     },
   });

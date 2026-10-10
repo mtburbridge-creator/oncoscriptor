@@ -1,6 +1,8 @@
 # OncoGenik setup guide
 
-Six settings turn the deployed site into your private, working OncoGenik. You set them in Vercel, in three rounds.
+Six settings turn the deployed site into your private, working OncoGenik at https://markburbridge.com/oncogenik. You set them in Vercel, on the `oncoscriptor` project, in three rounds.
+
+You always open OncoGenik at markburbridge.com. The frontpage project forwards that path to `oncoscriptor.vercel.app/oncogenik`. Sign-in works only at markburbridge.com, because your passkey is bound to that name.
 
 | Round | What you do | Time |
 |---|---|---|
@@ -52,16 +54,20 @@ You never need this value again, so there is nothing to keep.
 
 | | |
 |---|---|
-| Value | `oncoscriptor.vercel.app` |
+| Value | `markburbridge.com` |
 | Type | Config |
 
 **Why.** A passkey is locked to one website name, called the relying party ID. Your device refuses to use it anywhere else, which is what makes passkeys immune to look-alike phishing sites. This setting tells the server which name to expect. It must match the address bar exactly, with no `https://` and no trailing slash.
 
 **Steps.**
 
-1. Add a variable named `RP_ID` with the value `oncoscriptor.vercel.app`, choose Config, tick Production only, save.
+1. Add a variable named `RP_ID` with the value `markburbridge.com`, choose Config, tick Production only, save.
 
-If you later move OncoGenik to your own domain, change this to that domain and enroll a new passkey, because the old one stays bound to the old name.
+The passkey binds to the whole site name, not to the `/oncogenik` path. That is how WebAuthn works, and it is fine here because every app on markburbridge.com is yours. Do not use `www.markburbridge.com`, which redirects to `markburbridge.com`.
+
+You do not need a separate `ORIGIN` setting. It defaults to `https://` plus this value, which is exactly `https://markburbridge.com`.
+
+If OncoGenik ever moves to another domain, change this to that domain and enroll a new passkey, because the old one stays bound to the old name.
 
 ### 3. SETUP_TOKEN
 
@@ -123,7 +129,7 @@ The app writes to the `main` branch by default. A sixth optional setting, `GITHU
 1. In Vercel, open the **Deployments** tab.
 2. On the top deployment, the one marked Production, open the **⋯** menu and choose **Redeploy**. Clear **Use existing Build Cache** if it is offered, then confirm.
 3. Wait for the status to show Ready, about a minute.
-4. Open https://oncoscriptor.vercel.app/login and click **Sign in with passkey**.
+4. Open https://markburbridge.com/oncogenik/login and click **Sign in with passkey**.
 
 **What you should see.** "No passkey is enrolled yet." That message means the secret, the site name, and the server are all working. Any other error means a setting is missing or mistyped, and the message names which one.
 
@@ -142,7 +148,7 @@ The app writes to the `main` branch by default. A sixth optional setting, `GITHU
 
 **Steps.**
 
-1. On the device you will use most, open https://oncoscriptor.vercel.app/login?setup=1. A phone or a Mac with Touch ID both work, and a synced passkey then appears on your other Apple or Google devices too.
+1. On the device you will use most, open https://markburbridge.com/oncogenik/login?setup=1. A phone or a Mac with Touch ID both work, and a synced passkey then appears on your other Apple or Google devices too.
 2. Under **Enroll a passkey**, paste your setup token into **Setup token** and click **Create passkey**.
 3. Approve the prompt with your face, fingerprint, or device PIN.
 4. A box labelled **PASSKEY_CREDENTIAL** appears. Click **Copy**.
@@ -158,7 +164,7 @@ The app writes to the `main` branch by default. A sixth optional setting, `GITHU
 ### Finish Round B
 
 1. Redeploy again, the same way as Round A.
-2. Open https://oncoscriptor.vercel.app/login and click **Sign in with passkey**.
+2. Open https://markburbridge.com/oncogenik/login and click **Sign in with passkey**.
 3. Approve the prompt. You land on the OncoGenik dashboard, with the demo project listed under Done.
 
 ---
@@ -182,6 +188,7 @@ Redeploy once both are saved.
 |---|---|---|
 | "RP_ID is not set" | Round A not redeployed, or the setting missing | Check the setting exists for Production, then redeploy |
 | "Enrollment is closed or the token is wrong" | Token mistyped, or not yet redeployed after adding it | Re-check the note, redeploy, try again |
-| Passkey prompt says no passkey for this site | `RP_ID` differs from the address bar | Make them match exactly, redeploy, enroll again |
+| Passkey prompt says no passkey for this site | You opened the vercel.app address, or `RP_ID` is not `markburbridge.com` | Use https://markburbridge.com/oncogenik, or fix the setting, redeploy, and enroll again |
+| markburbridge.com/oncogenik shows a 404 | The frontpage rewrite for `/oncogenik` is missing or not yet deployed | Check the frontpage `vercel.json` has both `/oncogenik` rules |
 | Signed in, but saving fails | `GITHUB_TOKEN` expired or lacks Contents write | Make a new token per step 4, replace the value, redeploy |
 | Lost the device that holds the passkey | Synced passkeys survive on your other devices. If none remain, re-enroll | Set a new `SETUP_TOKEN`, redeploy, and repeat Round B |

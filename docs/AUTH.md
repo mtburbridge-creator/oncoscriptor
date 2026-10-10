@@ -4,6 +4,10 @@ Passkey only, one user, no database. This page covers the environment variables,
 
 Files: `middleware.js` (repo root), `api/_auth/*.js`, `api/_lib/session.js`, `api/_lib/ratelimit.js`, `web/login.html`, `web/login.js`, `tools/test-auth.js`.
 
+## Served under /oncogenik
+
+The app lives at `https://markburbridge.com/oncogenik`. The frontpage project forwards `/oncogenik` and `/oncogenik/*` unchanged to `https://oncoscriptor.vercel.app/oncogenik/*`. So every page, asset, and API route sits under `/oncogenik`, and both cookies are scoped to it. `og_session` uses `Path=/oncogenik`, so the browser never sends it to the other apps proxied under markburbridge.com.
+
 ## Environment variables
 
 Set these in the Vercel project (Settings, Environment Variables). None of them is read by the browser.
@@ -11,8 +15,8 @@ Set these in the Vercel project (Settings, Environment Variables). None of them 
 | Variable | Required | Example | Purpose |
 |---|---|---|---|
 | `SESSION_SECRET` | yes | 32+ random characters, e.g. `openssl rand -base64 48` | HMAC key for the `og_session` and `og_challenge` cookies. Rotating it signs everyone out. |
-| `RP_ID` | yes | `oncogenik.vercel.app` or the custom domain | WebAuthn relying party ID. Must equal the site's hostname (or a registrable parent of it). A passkey is bound to this value; changing the domain means enrolling again. |
-| `ORIGIN` | no | `https://oncogenik.vercel.app` | Expected origin for WebAuthn responses. Defaults to `https://` + `RP_ID`. Set it explicitly if they differ. |
+| `RP_ID` | yes | `markburbridge.com` | WebAuthn relying party ID. Must equal the site's hostname (or a registrable parent of it). A passkey is bound to this value; changing the domain means enrolling again. |
+| `ORIGIN` | no | `https://markburbridge.com` | Expected origin for WebAuthn responses. Defaults to `https://` + `RP_ID`. Set it explicitly if they differ. |
 | `PASSKEY_CREDENTIAL` | after enrollment | `{"id":"...","publicKey":"...","counter":0,"transports":["internal","hybrid"]}` | The enrolled passkey. Produced by the setup flow below. While unset, `/api/auth/options` answers 404 and nobody can sign in. |
 | `SETUP_TOKEN` | only during enrollment | `openssl rand -hex 24` | While set, the enrollment routes exist and accept this value in the `x-setup-token` header. Delete it after enrolling. |
 
@@ -21,11 +25,11 @@ Preview deployments get their own hostname, so a passkey enrolled for production
 ## Enrollment walkthrough
 
 1. Set `SESSION_SECRET`, `RP_ID`, and a fresh `SETUP_TOKEN` in Vercel. Leave `PASSKEY_CREDENTIAL` unset. Deploy.
-2. On the device whose passkey you want to use, open `https://<RP_ID>/login?setup=1`.
+2. On the device whose passkey you want to use, open `https://markburbridge.com/oncogenik/login?setup=1`.
 3. Paste the setup token, press "Create passkey", and complete the platform prompt (Touch ID, Face ID, Windows Hello, a security key, or a phone via QR code).
 4. The page shows a JSON string. Copy it into a new Vercel environment variable `PASSKEY_CREDENTIAL`.
 5. Delete `SETUP_TOKEN`. Redeploy so both changes take effect.
-6. Open `/login` and press "Sign in with passkey". You land on `/`.
+6. Open `/oncogenik/login` and press "Sign in with passkey". You land on `/oncogenik`.
 
 Behind the page: `POST /api/auth/setup-options` returns `generateRegistrationOptions()` output (rpName `OncoGenik`, userName `owner`, a fixed 16-byte user handle, resident key and user verification both `preferred`, attestation `none`) and sets the challenge cookie; the browser runs `startRegistration({ optionsJSON })`; `POST /api/auth/setup-verify` runs `verifyRegistrationResponse()` and returns `registrationInfo.credential` as base64url strings plus `deviceType` and `backedUp`. The server stores nothing. Both setup routes answer 404 whenever `SETUP_TOKEN` is unset or the header does not match, so after step 5 they are indistinguishable from routes that do not exist.
 
@@ -50,7 +54,7 @@ The MAC is over the decoded payload bytes, not the base64url text. Verification 
 
 ### Challenge cookie
 
-Cookie `og_challenge`, same signing scheme, payload `{"challenge","kind","iat","exp"}` with a two-minute `exp`, `HttpOnly; Secure; SameSite=Strict; Path=/api/auth`. `kind` is `auth` or `reg`, so a registration challenge cannot be replayed to the login verifier. Both verify routes clear the cookie before checking anything, which is what makes a challenge single use without a store.
+Cookie `og_challenge`, same signing scheme, payload `{"challenge","kind","iat","exp"}` with a two-minute `exp`, `HttpOnly; Secure; SameSite=Strict; Path=/oncogenik/api/auth`. `kind` is `auth` or `reg`, so a registration challenge cannot be replayed to the login verifier. Both verify routes clear the cookie before checking anything, which is what makes a challenge single use without a store.
 
 ### Counters
 
@@ -72,13 +76,15 @@ Rules:
 
 | Path | Without a session |
 |---|---|
-| `/login`, `/login.js`, `/api/auth/*`, `/backgenapp`, `/backgenapp/*`, `/vendor/*`, `/favicon.ico` | pass through |
+| `/oncogenik/login`, `/oncogenik/login.js`, `/oncogenik/favicon.svg`, `/oncogenik/api/auth/*`, `/oncogenik/vendor/*`, `/backgenapp`, `/backgenapp/*` | pass through |
 | `/api/*` (anything else) | `401 {"error":"unauthorized"}` |
-| any other page | `302` to `/login` |
+| any other page | `302` to `/oncogenik/login`, as a relative Location |
 
 With a valid `og_session` cookie everything passes. "Pass through" is a `Response` carrying `x-middleware-next: 1`, which is exactly what `@vercel/functions`' `next()` builds (checked in `@vercel/functions` 3.9.11, `middleware.js`); building it by hand avoids adding that dependency.
 
-`config.matcher` is `["/((?!vendor/|favicon\\.ico).*)"]`: static vendor files and the favicon skip the middleware entirely, every other path runs it. The public-path check is then done in code with exact and prefix matches, so `/login-x` or `/backgenappx` are not accidentally public and `/Login` is treated as a protected page.
+`config.matcher` is `["/((?!oncogenik/vendor/).*)"]`: static vendor files skip the middleware entirely, every other path runs it. The public-path check is then done in code with exact and prefix matches, so `/oncogenik/login-x` or `/backgenappx` are not accidentally public and `/oncogenik/Login` is treated as a protected page.
+
+The login redirect is relative (`/oncogenik/login`). A visitor on markburbridge.com reaches this project through the frontpage proxy, and an absolute URL built from the request would send them to the raw `oncoscriptor.vercel.app` host, where their passkey does not work.
 
 Declaration, per the Vercel docs (see Sources): the file is `middleware.js` or `middleware.ts` at the same level as `package.json`, the handler is the default export, and `export const config = { matcher: [...] }` scopes it. Vercel bundles this file itself, so its ESM syntax does not need `"type": "module"` in `package.json`; that note in the docs is about functions under `api/`, which here stay CommonJS. The default runtime is now `nodejs`; the file does not pin a runtime because it uses nothing beyond `Request`, `Response`, `URL`, `atob`, `TextEncoder`, and `crypto.subtle`, which both runtimes provide.
 

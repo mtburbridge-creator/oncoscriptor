@@ -2,6 +2,8 @@
  * Every action here is a POST that becomes one git commit on the server. */
 (function () {
   "use strict";
+  // Served at markburbridge.com/oncogenik. Every URL the app builds starts here.
+  var BASE = "/oncogenik";
 
   var PHASES = ["research", "draft", "script_review", "outline_images", "review", "slides", "package", "done"];
   var PHASE_LABELS = {
@@ -55,7 +57,7 @@
     if (hrs < 48) return hrs + " h ago";
     return Math.round(hrs / 24) + " d ago";
   }
-  function fileUrl(path, raw) { return "/api/file?path=" + encodeURIComponent(path) + (raw ? "&raw=1" : ""); }
+  function fileUrl(path, raw) { return BASE + "/api/file?path=" + encodeURIComponent(path) + (raw ? "&raw=1" : ""); }
 
   var toastTimer = null;
   function toast(msg, kind) {
@@ -91,7 +93,7 @@
     var init = { method: method, headers: { "Accept": "application/json" }, credentials: "same-origin" };
     if (body !== undefined) { init.headers["Content-Type"] = "application/json"; init.body = JSON.stringify(body); }
     return fetch(path, init).then(function (r) {
-      if (r.status === 401) { location.href = "/login"; return new Promise(function () {}); }
+      if (r.status === 401) { location.href = BASE + "/login"; return new Promise(function () {}); }
       return r.text().then(function (text) {
         var data = null;
         try { data = text ? JSON.parse(text) : null; } catch (e) { data = { error: text }; }
@@ -171,7 +173,7 @@
       var btn = h("button", { class: "btn sm warn" }, "Retry");
       btn.addEventListener("click", function () {
         busy(btn, function () {
-          return POST("/api/projects/" + slug + "/task", { task: t.name, status: "todo" }).then(function () {
+          return POST(BASE + "/api/projects/" + slug + "/task", { task: t.name, status: "todo" }).then(function () {
             toast("Queued " + t.name + " again", "good"); onDone();
           });
         });
@@ -209,7 +211,7 @@
   }
 
   function viewDashboard(q) {
-    return Promise.all([GET("/api/projects"), GET("/api/ideas").catch(function () { return { ideas: [] }; })]).then(function (res) {
+    return Promise.all([GET(BASE + "/api/projects"), GET(BASE + "/api/ideas").catch(function () { return { ideas: [] }; })]).then(function (res) {
       var projects = res[0].projects || [];
       var ideas = (res[1].ideas || []).filter(function (i) { return i.status !== "started" && i.status !== "done"; });
       var groups = groupProjects(projects);
@@ -263,7 +265,7 @@
       var body = { title: title.value.trim(), minutes: Number(minutes.value), idea: select.value || undefined };
       if (!body.title) { toast("Give the project a title", "bad"); return; }
       busy(submit, function () {
-        return POST("/api/projects", body).then(function (r) {
+        return POST(BASE + "/api/projects", body).then(function (r) {
           toast("Started " + r.project.slug, "good");
           location.hash = "#/projects/" + r.project.slug;
         });
@@ -276,7 +278,7 @@
   /* ---------- ideas ---------- */
 
   function viewIdeas() {
-    return GET("/api/ideas").then(function (r) {
+    return GET(BASE + "/api/ideas").then(function (r) {
       var ideas = r.ideas || [];
       var root = h("div");
 
@@ -290,7 +292,7 @@
       form.addEventListener("submit", function (ev) {
         ev.preventDefault();
         busy(submit, function () {
-          return POST("/api/ideas", { title: title.value.trim(), text: text.value }).then(function () {
+          return POST(BASE + "/api/ideas", { title: title.value.trim(), text: text.value }).then(function () {
             toast("Idea saved", "good"); render();
           });
         });
@@ -316,7 +318,7 @@
   /* ---------- project ---------- */
 
   function viewProject(slug) {
-    return GET("/api/projects/" + encodeURIComponent(slug)).then(function (r) {
+    return GET(BASE + "/api/projects/" + encodeURIComponent(slug)).then(function (r) {
       var p = r.project, files = r.files || [], w = r.waiting || {};
       var has = function (path) { return files.some(function (f) { return f.path === path; }); };
       var listUnder = function (prefix) { return files.filter(function (f) { return f.path.indexOf(prefix) === 0; }).map(function (f) { return f.path; }); };
@@ -324,7 +326,7 @@
       var reload = function () { render(); };
       var act = function (btn, action, payload, okMsg) {
         return busy(btn, function () {
-          return POST("/api/projects/" + slug + "/action", { action: action, payload: payload || {} }).then(function () {
+          return POST(BASE + "/api/projects/" + slug + "/action", { action: action, payload: payload || {} }).then(function () {
             toast(okMsg || (action + " done"), "good"); reload();
           });
         });
@@ -641,7 +643,7 @@
       if (!confirm("Finish the review? Claude builds the deck from the saved order.")) return;
       err.classList.add("hidden");
       busy(finish, function () {
-        return POST("/api/projects/" + p.slug + "/action", { action: "review.finish", payload: {} })
+        return POST(BASE + "/api/projects/" + p.slug + "/action", { action: "review.finish", payload: {} })
           .then(function () { toast("Review finished, Claude is building the deck", "good"); render(); })
           .catch(function (e) { err.textContent = e.message; err.classList.remove("hidden"); });
       });
@@ -655,7 +657,7 @@
   /* ---------- guidelines ---------- */
 
   function viewGuidelines(tab) {
-    return GET("/api/guidelines").then(function (r) {
+    return GET(BASE + "/api/guidelines").then(function (r) {
       var files = r.files || {}, names = Object.keys(files);
       var current = names.indexOf(tab) >= 0 ? tab : names[0];
       var root = h("div");
@@ -671,7 +673,7 @@
       }));
       save.addEventListener("click", function () {
         busy(save, function () {
-          return PUT("/api/guidelines", { file: current, content: editor.value }).then(function () {
+          return PUT(BASE + "/api/guidelines", { file: current, content: editor.value }).then(function () {
             files[current] = editor.value; toast("Saved guidelines/" + current, "good");
           });
         });
@@ -697,7 +699,7 @@
   function proposalCard(slug, pr) {
     var decide = function (btn, decision) {
       return busy(btn, function () {
-        return POST("/api/guidelines/proposal", { slug: slug, id: pr.id, decision: decision }).then(function () {
+        return POST(BASE + "/api/guidelines/proposal", { slug: slug, id: pr.id, decision: decision }).then(function () {
           toast((decision === "accept" ? "Accepted" : "Rejected") + " proposal " + pr.id, "good"); render();
         });
       });
@@ -720,7 +722,7 @@
   /* ---------- boot ---------- */
 
   document.getElementById("signout").addEventListener("click", function () {
-    fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(function () {}).then(function () { location.href = "/login"; });
+    fetch(BASE + "/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(function () {}).then(function () { location.href = BASE + "/login"; });
   });
   window.addEventListener("hashchange", render);
   render();

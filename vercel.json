@@ -7,8 +7,12 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/api/:__route*",
+      "source": "/oncogenik/api/:__route*",
       "destination": "/api/router"
+    },
+    {
+      "source": "/oncogenik",
+      "destination": "/oncogenik/index.html"
     },
     {
       "source": "/backgenapp",

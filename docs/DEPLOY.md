@@ -26,7 +26,7 @@ The Actions runner only fires on `main`, so the pull request has to land first. 
 | `GITHUB_REPO` | `mtburbridge-creator/oncoscriptor` |
 | `GITHUB_BRANCH` | `main` |
 | `SESSION_SECRET` | `openssl rand -base64 48` |
-| `RP_ID` | the hostname you will sign in at |
+| `RP_ID` | `markburbridge.com` |
 | `SETUP_TOKEN` | `openssl rand -hex 24`, temporary |
 | `ROUTINE_FIRE_URL` | the routine's fire URL |
 | `ROUTINE_FIRE_TOKEN` | the routine's bearer token |
@@ -35,7 +35,7 @@ The Actions runner only fires on `main`, so the pull request has to land first. 
 
 ## 4. Enroll the passkey
 
-Open `/login?setup=1`, paste the setup token, approve the passkey prompt on your device, copy the JSON the page shows into a new `PASSKEY_CREDENTIAL` variable, delete `SETUP_TOKEN`, redeploy. Sign in at `/login`. Full walkthrough in `docs/AUTH.md`.
+Open `https://markburbridge.com/oncogenik/login?setup=1`, paste the setup token, approve the passkey prompt on your device, copy the JSON the page shows into a new `PASSKEY_CREDENTIAL` variable, delete `SETUP_TOKEN`, redeploy. Sign in at `https://markburbridge.com/oncogenik/login`. Full walkthrough in `docs/AUTH.md`.
 
 ## 5. Hermes
 

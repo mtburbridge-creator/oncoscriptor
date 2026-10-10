@@ -6,10 +6,13 @@
  *
  * Assembles dist/, the only directory Vercel serves statically:
  *
- *   dist/                              <- web/**  (the OncoGenik UI pages)
+ *   dist/oncogenik/                    <- web/**  (the OncoGenik UI pages)
+ *   dist/oncogenik/vendor/simplewebauthn-browser.js <- @simplewebauthn/browser UMD bundle
+ *   dist/oncogenik/vendor/marked.min.js <- node_modules/marked UMD bundle
  *   dist/backgenapp/index.html         <- slides/studio/index.html (the Studio, one canonical copy in git)
- *   dist/vendor/simplewebauthn-browser.js <- node_modules/@simplewebauthn/browser UMD bundle
- *   dist/vendor/marked.min.js          <- node_modules/marked UMD bundle
+ *
+ * The UI sits under /oncogenik so the frontpage project can serve it at
+ * markburbridge.com/oncogenik by forwarding that path unchanged.
  *
  * Nothing else is copied, so projects/, ideas/, guidelines/ and the rest of the
  * repo are never reachable over HTTP. Serverless functions in api/ are picked up
@@ -25,10 +28,12 @@ const path = require('path');
 const REPO = path.resolve(__dirname, '..');
 const DIST = path.join(REPO, 'dist');
 
+const BASE = 'oncogenik';
+
 const COPIES = [
   { from: 'slides/studio/index.html', to: 'backgenapp/index.html' },
-  { from: 'node_modules/@simplewebauthn/browser/dist/bundle/index.umd.min.js', to: 'vendor/simplewebauthn-browser.js' },
-  { from: 'node_modules/marked/lib/marked.umd.js', to: 'vendor/marked.min.js' }
+  { from: 'node_modules/@simplewebauthn/browser/dist/bundle/index.umd.min.js', to: BASE + '/vendor/simplewebauthn-browser.js' },
+  { from: 'node_modules/marked/lib/marked.umd.js', to: BASE + '/vendor/marked.min.js' }
 ];
 
 function stage() {
@@ -43,11 +48,11 @@ function stage() {
         const abs = path.join(dir, e.name);
         if (e.isDirectory()) walk(abs);
         else if (e.isFile()) {
-          const rel = path.relative(web, abs);
+          const rel = path.join(BASE, path.relative(web, abs));
           const dest = path.join(DIST, rel);
           fs.mkdirSync(path.dirname(dest), { recursive: true });
           fs.copyFileSync(abs, dest);
-          copied.push({ from: path.join('web', rel), to: rel });
+          copied.push({ from: path.join('web', path.relative(web, abs)), to: rel });
         }
       }
     };
@@ -76,4 +81,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { stage, COPIES, DIST };
+module.exports = { stage, COPIES, DIST, BASE };
