@@ -1,5 +1,7 @@
 # Bringing OncoGenik live
 
+For click-by-click setting instructions with the reason behind each one, follow `docs/SETUP_GUIDE.md`.
+
 Order of operations. Each step has its own doc with the details.
 
 ## 1. Merge to main
