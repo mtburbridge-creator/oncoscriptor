@@ -6,6 +6,7 @@ A pipeline that turns a patient-facing oncology video idea into a script, a talk
 |---|---|
 | `docs/ENGINE_DESIGN.md` | Architecture, lifecycle, decisions, build status |
 | `docs/DEPLOY.md` | Order of operations to bring it live |
+| `docs/SETUP_GUIDE.md` | Every Vercel setting, step by step, and why |
 | `docs/HERMES_CONTRACT.md`, `hermes/` | What Hermes polls for and writes |
 | `docs/ROUTINE.md`, `routine/PROMPT.md` | How Claude runs as a Routine on your subscription |
 | `docs/ACTIONS.md` | Opt-in GitHub Actions fallback |
