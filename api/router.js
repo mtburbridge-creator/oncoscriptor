@@ -24,13 +24,14 @@ const ROUTES = [
   { re: /^guidelines\/proposal$/,       load: () => require("./_guidelines/proposal") }
 ];
 
-// The route arrives as ?__route=<path> from the rewrite. Without it, take the
-// path after /api/ so the router also works when called directly.
+// The route arrives as ?__route=<path> from the /oncogenik/api/* rewrite.
+// Without it, take the path after /oncogenik/api/ or /api/ so the router also
+// works when called directly.
 function routeOf(req) {
   const u = new URL(req.url || "/", "http://localhost");
   let r = (req.query && req.query.__route) || u.searchParams.get("__route");
   if (Array.isArray(r)) r = r.join("/");
-  if (!r) r = u.pathname.replace(/^\/api\/?/, "");
+  if (!r) r = u.pathname.replace(/^\/oncogenik/, "").replace(/^\/api\/?/, "");
   return decodeURIComponent(String(r)).replace(/^\/+|\/+$/g, "");
 }
 

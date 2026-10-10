@@ -4,7 +4,11 @@
 
 - Work on a feature branch, never directly on `main`.
 - After every significant completed step, commit, push the branch, open a pull request, and merge it into `main` once CI is green.
-- `main` is what Vercel deploys, so unmerged work never reaches https://oncoscriptor.vercel.app.
+- `main` is what Vercel deploys, so unmerged work never reaches the live site.
+
+## Where it is served
+
+The app is served at https://markburbridge.com/oncogenik. The `mtburbridge-creator/frontpage` project forwards `/oncogenik` and `/oncogenik/*` to `https://oncoscriptor.vercel.app/oncogenik/*`. Every page, asset, API route, cookie path, and redirect lives under `/oncogenik`. `tools/test-router.js` fails if any of them escapes it.
 
 The Claude routine in `routine/PROMPT.md` is the exception. It commits project state straight to `main` by design, because that state is data, not code.
 

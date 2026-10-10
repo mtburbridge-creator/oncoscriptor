@@ -42,11 +42,11 @@ function mockRes() {
 
   await t("vercel.json rewrites /api/* to the router", () => {
     const v = JSON.parse(fs.readFileSync(path.join(ROOT, "vercel.json"), "utf8"));
-    const r = v.rewrites.find(x => x.source.startsWith("/api/:"));
-    assert.ok(r && r.destination.startsWith("/api/router"), "missing rewrite");
+    const r = v.rewrites.find(x => x.destination === "/api/router");
+    assert.ok(r, "missing rewrite");
     // Vercel appends the rewrite's parameter as a query key. It must be the
     // router's own key, never one a handler reads, such as /api/file?path=.
-    assert.equal(r.source, "/api/:__route*");
+    assert.equal(r.source, "/oncogenik/api/:__route*");
     assert.equal(v.rewrites.indexOf(r), 0, "api rewrite must come first");
   });
 
@@ -56,6 +56,12 @@ function mockRes() {
       if (!/\.(js|html)$/.test(f)) continue;
       const s = fs.readFileSync(path.join(ROOT, "web", f), "utf8");
       for (const m of s.matchAll(/\/api\/([a-zA-Z0-9_/.-]+)/g)) urls.add(m[1].replace(/\/$/, ""));
+      // Every root-absolute app URL must carry the /oncogenik base path, or it
+      // escapes the subpath that markburbridge.com forwards to this project.
+      for (const m of s.matchAll(/(?:src|href)="(\/[^"#]*)"/g)) {
+        assert.ok(m[1].startsWith("/oncogenik/") || m[1] === "/backgenapp", f + " links outside the base path: " + m[1]);
+      }
+      assert.ok(!/(?<!BASE \+ )["'`]\/(api|login|vendor)\b/.test(s), f + " has an unprefixed /api, /login or /vendor URL");
     }
     // The project view builds /api/projects/<slug>[/action|/task] at runtime.
     urls.add("projects/demo"); urls.add("projects/demo/action"); urls.add("projects/demo/task");
@@ -65,6 +71,7 @@ function mockRes() {
   await t("route comes from __route or from the path", () => {
     assert.equal(router.routeOf({ url: "/api/router?__route=auth%2Fme", query: { __route: "auth/me" } }), "auth/me");
     assert.equal(router.routeOf({ url: "/api/projects/x/task" }), "projects/x/task");
+    assert.equal(router.routeOf({ url: "/oncogenik/api/projects/x/task" }), "projects/x/task");
   });
 
   await t("dispatch reaches the real handler and strips __route", async () => {
@@ -83,6 +90,18 @@ function mockRes() {
     const res = mockRes();
     await router(req, res);
     assert.equal(req.query.slug, "immunotherapy-side-effects");
+  });
+
+  await t("one base path everywhere", () => {
+    const S = require(path.join(ROOT, "api/_lib/session.js"));
+    const stage = require(path.join(ROOT, "tools/stage-static.js"));
+    const mw = fs.readFileSync(path.join(ROOT, "middleware.js"), "utf8");
+    assert.equal(S.BASE, "/oncogenik");
+    assert.equal("/" + stage.BASE, S.BASE);
+    assert.ok(mw.includes('export const BASE = "' + S.BASE + '"'), "middleware BASE");
+    for (const f of ["web/app.js", "web/login.js"]) {
+      assert.ok(fs.readFileSync(path.join(ROOT, f), "utf8").includes('var BASE = "' + S.BASE + '"'), f + " BASE");
+    }
   });
 
   await t("unknown route is a JSON 404", async () => {

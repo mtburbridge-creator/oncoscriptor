@@ -12,6 +12,10 @@ The web app is static files in `web/` (staged into `dist/` by `tools/stage-stati
 
 Session variables (`SESSION_SECRET`, the passkey credential, `SETUP_TOKEN`) belong to the auth layer; see `docs/AUTH.md`.
 
+## Base path
+
+Everything is served under `/oncogenik`, which markburbridge.com forwards to this project. Pages and assets are staged into `dist/oncogenik/`, the API answers at `/oncogenik/api/*`, and `web/app.js` builds every URL from one `BASE` constant.
+
 ## One function
 
 Vercel's Hobby plan deploys at most 12 serverless functions. Every `/api/*` URL is rewritten by `vercel.json` to `api/router.js`, the only deployed function, which dispatches to handler modules in underscore folders such as `api/_projects/`. Vercel skips files under underscore paths when counting functions. `tools/test-router.js` fails if a new file under `api/` would become a second function, so new endpoints go into the router's table instead.

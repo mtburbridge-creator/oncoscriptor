@@ -130,7 +130,7 @@ t("cookie setters and requireSession", async () => {
   S.setSessionCookie(res, v);
   const c = res.cookies()[0];
   assert.ok(c.startsWith("og_session=" + v + ";"));
-  for (const attr of ["HttpOnly", "Secure", "SameSite=Strict", "Path=/", "Max-Age=43200"]) {
+  for (const attr of ["HttpOnly", "Secure", "SameSite=Strict", "Path=/oncogenik;", "Max-Age=43200"]) {
     assert.ok(c.includes(attr), "has " + attr);
   }
   S.clearSessionCookie(res);
@@ -145,11 +145,11 @@ t("cookie setters and requireSession", async () => {
   assert.deepEqual(r2.json(), { error: "unauthorized" });
 });
 
-t("challenge cookie: kind bound, 2 minutes, Path=/api/auth", () => {
+t("challenge cookie: kind bound, 2 minutes, Path=/oncogenik/api/auth", () => {
   const res = mockRes();
   S.setChallengeCookie(res, "abc123", "auth");
   const c = res.cookies()[0];
-  assert.ok(c.includes("Path=/api/auth") && c.includes("Max-Age=120") && c.includes("HttpOnly") && c.includes("SameSite=Strict"));
+  assert.ok(c.includes("Path=/oncogenik/api/auth;") && c.includes("Max-Age=120") && c.includes("HttpOnly") && c.includes("SameSite=Strict"));
   const val = cookieValue(res, "og_challenge");
   const req = { headers: { cookie: "og_challenge=" + val } };
   assert.equal(S.readChallenge(req, "auth"), "abc123");
@@ -200,28 +200,30 @@ t("middleware routing rules", async () => {
   const run = (p, cookie) => mw.default(new Request("https://oncogenik.test" + p, { headers: cookie ? { cookie } : {} }));
   const isPass = (r) => r.status === 200 && r.headers.get("x-middleware-next") === "1";
 
-  for (const p of ["/login", "/login.js", "/api/auth/options", "/api/auth/verify", "/backgenapp", "/backgenapp/", "/backgenapp/index.html", "/vendor/x.js", "/favicon.ico"]) {
+  for (const p of ["/oncogenik/login", "/oncogenik/login.js", "/oncogenik/favicon.svg", "/oncogenik/api/auth/options", "/oncogenik/api/auth/verify", "/oncogenik/vendor/x.js", "/backgenapp", "/backgenapp/", "/backgenapp/index.html"]) {
     assert.ok(isPass(await run(p)), "public: " + p);
   }
-  for (const p of ["/", "/index.html", "/projects/abc", "/login-other", "/backgenappx", "/Login"]) {
+  // Old root paths are no longer public.
+  for (const p of ["/", "/login", "/login.js", "/vendor/x.js", "/oncogenik", "/oncogenik/", "/oncogenik/index.html", "/oncogenik/app.js", "/projects/abc", "/oncogenik/login-other", "/backgenappx", "/oncogenik/Login"]) {
     const r = await run(p);
     assert.equal(r.status, 302, "redirect: " + p);
-    assert.equal(r.headers.get("location"), "https://oncogenik.test/login");
+    // Relative, so a visitor on markburbridge.com is not bounced to the vercel.app origin.
+    assert.equal(r.headers.get("location"), "/oncogenik/login");
   }
-  for (const p of ["/api/projects", "/api", "/api/auth", "/api/authx"]) {
+  for (const p of ["/oncogenik/api/projects", "/oncogenik/api", "/oncogenik/api/auth", "/oncogenik/api/authx", "/api/router", "/api/auth/options", "/api", "/api/projects"]) {
     const r = await run(p);
     assert.equal(r.status, 401, "401: " + p);
     assert.deepEqual(await r.json(), { error: "unauthorized" });
   }
-  assert.ok(isPass(await run("/", "og_session=" + v)));
-  assert.ok(isPass(await run("/api/projects", "a=b; og_session=" + v)));
-  assert.equal((await run("/api/projects", "og_session=" + v + "x")).status, 401);
-  assert.equal((await run("/", "og_session=garbage")).status, 302);
+  assert.ok(isPass(await run("/oncogenik", "og_session=" + v)));
+  assert.ok(isPass(await run("/oncogenik/api/projects", "a=b; og_session=" + v)));
+  assert.equal((await run("/oncogenik/api/projects", "og_session=" + v + "x")).status, 401);
+  assert.equal((await run("/oncogenik", "og_session=garbage")).status, 302);
 
   // No secret configured: nothing verifies.
   const saved = process.env.SESSION_SECRET;
   delete process.env.SESSION_SECRET;
-  assert.equal((await run("/", "og_session=" + v)).status, 302);
+  assert.equal((await run("/oncogenik", "og_session=" + v)).status, 302);
   process.env.SESSION_SECRET = saved;
 });
 

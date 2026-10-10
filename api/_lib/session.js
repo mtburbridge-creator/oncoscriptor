@@ -4,18 +4,22 @@
 // Cookie contract (shared with middleware.js and every other agent):
 //   og_session = <base64url(JSON payload)>.<base64url(HMAC-SHA256(payload bytes, SESSION_SECRET))>
 //   payload    = {"sub":"owner","iat":<unix seconds>,"exp":<unix seconds>}
-//   lifetime   = 12 hours; HttpOnly; Secure; SameSite=Strict; Path=/
+//   lifetime   = 12 hours; HttpOnly; Secure; SameSite=Strict; Path=/oncogenik
 //
 // The WebAuthn challenge rides in a second cookie, og_challenge, signed the
-// same way with a 2 minute lifetime and Path=/api/auth. See docs/AUTH.md.
+// same way with a 2 minute lifetime and Path=/oncogenik/api/auth. See docs/AUTH.md.
 
 const crypto = require("crypto");
 
+// The app is served under this path, at markburbridge.com/oncogenik through
+// the frontpage proxy. Cookies are scoped to it so other apps on the domain
+// never receive them.
+const BASE = "/oncogenik";
 const SESSION_COOKIE = "og_session";
 const CHALLENGE_COOKIE = "og_challenge";
 const SESSION_TTL_SECONDS = 12 * 60 * 60;
 const CHALLENGE_TTL_SECONDS = 2 * 60;
-const CHALLENGE_PATH = "/api/auth";
+const CHALLENGE_PATH = BASE + "/api/auth";
 
 function nowSeconds() {
   return Math.floor(Date.now() / 1000);
@@ -121,14 +125,14 @@ function setSessionCookie(res, value) {
     res,
     SESSION_COOKIE + "=" + value +
       "; Max-Age=" + SESSION_TTL_SECONDS +
-      "; Path=/; HttpOnly; Secure; SameSite=Strict",
+      "; Path=" + BASE + "; HttpOnly; Secure; SameSite=Strict",
   );
 }
 
 function clearSessionCookie(res) {
   appendSetCookie(
     res,
-    SESSION_COOKIE + "=; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly; Secure; SameSite=Strict",
+    SESSION_COOKIE + "=; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=" + BASE + "; HttpOnly; Secure; SameSite=Strict",
   );
 }
 
@@ -243,6 +247,7 @@ function rpConfig() {
 }
 
 module.exports = {
+  BASE,
   SESSION_COOKIE,
   CHALLENGE_COOKIE,
   SESSION_TTL_SECONDS,
